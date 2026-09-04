@@ -117,6 +117,8 @@ export async function dispatchCommand(
       case "create_project": {
         const p = params as {
           format: ProjectFormat;
+          uv_mode?: "box" | "face";
+          geometry_name?: string;
           name?: string;
           texture_width?: number;
           texture_height?: number;

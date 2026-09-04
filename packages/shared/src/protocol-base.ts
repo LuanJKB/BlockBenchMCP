@@ -49,7 +49,7 @@ export function makeError(
   return details === undefined ? { code, message } : { code, message, details };
 }
 
-export const PROJECT_FORMATS = ["java_block", "geckolib_model"] as const;
+export const PROJECT_FORMATS = ["java_block", "bedrock", "bedrock_old", "geckolib_model"] as const;
 export type ProjectFormat = (typeof PROJECT_FORMATS)[number];
 
 export const VIEW_PRESETS = [

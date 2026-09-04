@@ -4,6 +4,7 @@ import { createUndoPort } from "./undo-port.js";
 import { createTexturePort } from "./texture-port.js";
 import { createCanvasPort } from "./canvas-port.js";
 import { createFormatPort } from "./format-port.js";
+import { requireNodeModule } from "./node-modules.js";
 import { createPreviewPort } from "./preview-port.js";
 
 function probeCapabilities(host: Omit<BbHost, "probeCapabilities">): CapabilityId[] {
@@ -25,9 +26,9 @@ function probeCapabilities(host: Omit<BbHost, "probeCapabilities">): CapabilityI
   if (host.formats.hasGeckoLib()) caps.push("geckolib");
   const Anim = (globalThis as unknown as { Animation?: { all?: unknown } }).Animation;
   if (Anim?.all) caps.push("animations");
-  if (g.Blockbench?.isApp && typeof g.require === "function") {
+  if (g.Blockbench?.isApp) {
     try {
-      g.require("fs");
+      requireNodeModule("fs");
       caps.push("filesystem");
     } catch {
       /* no fs */

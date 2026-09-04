@@ -1,3 +1,5 @@
+import { requireNodeModule } from "../host/node-modules.js";
+
 /** Blockbench desktop grants a scoped `require` for `net` (network permission). */
 export type NetModule = {
   createServer: (
@@ -19,16 +21,7 @@ export type NetServer = {
 };
 
 export function loadNet(): NetModule {
-  const req =
-    (globalThis as { require?: (id: string) => unknown }).require ??
-    // eslint-disable-next-line no-undef
-    (typeof require !== "undefined" ? require : undefined);
-  if (typeof req !== "function") {
-    throw new Error(
-      "Blockbench desktop `require` is unavailable. Use the desktop app, not the web app.",
-    );
-  }
-  const net = req("net") as NetModule | null;
+  const net = requireNodeModule<NetModule>("net");
   if (!net?.createServer) {
     throw new Error(
       "Network access (net module) was denied. Allow it for this plugin, then Start MCP Server.",

@@ -1,5 +1,6 @@
 import type { SessionState } from "../session.js";
 import { CommandError } from "../errors.js";
+import { requireNodeModule } from "../host/node-modules.js";
 import { requireProject } from "../bb/elements.js";
 
 type FsApi = {
@@ -19,18 +20,8 @@ type PathApi = {
   relative: (from: string, to: string) => string;
 };
 
-function requireModule<T>(name: string): T {
-  const req = (
-    globalThis as unknown as { require?: (module: string) => unknown }
-  ).require;
-  if (typeof req !== "function") {
-    throw new CommandError("E_BLOCKBENCH_ERROR", "Node modules unavailable");
-  }
-  return req(name) as T;
-}
-
 function fsApi(): FsApi {
-  const fs = requireModule<Partial<FsApi>>("fs");
+  const fs = requireNodeModule<Partial<FsApi>>("fs");
   if (!fs?.existsSync || !fs.readFileSync || !fs.writeFileSync) {
     throw new CommandError(
       "E_BLOCKBENCH_ERROR",
@@ -47,7 +38,7 @@ export function scopedTarget(session: SessionState, path: string): string {
       "Call propose_scoped_directory first and get user approval.",
     );
   }
-  const paths = requireModule<PathApi>("path");
+  const paths = requireNodeModule<PathApi>("path");
   if (!paths.isAbsolute(path)) {
     throw new CommandError(
       "E_SCOPE_DENIED",
@@ -148,7 +139,7 @@ export function proposeScopedDirectory(
   session: SessionState,
   path: string,
 ): { scoped_directory: string; confirmed: boolean } {
-  const paths = requireModule<PathApi>("path");
+  const paths = requireNodeModule<PathApi>("path");
   if (!paths.isAbsolute(path)) {
     throw new CommandError(
       "E_INVALID_PARAM",

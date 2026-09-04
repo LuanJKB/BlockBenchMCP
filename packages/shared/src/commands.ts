@@ -151,7 +151,7 @@ export const COMMAND_SPECS = {
   },
   create_project: {
     description:
-      "Create java_block or geckolib_model project (closes nothing silently — requires format).",
+      "Create java_block, bedrock, bedrock_old, or geckolib_model project (closes nothing silently — requires format).",
     mutates: true,
     params: createProjectParamsSchema,
   },

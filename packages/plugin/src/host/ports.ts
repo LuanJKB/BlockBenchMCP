@@ -61,6 +61,8 @@ export interface FormatPort {
   currentId: () => string | null;
   createProject: (opts: {
     format: string;
+    uv_mode?: "box" | "face";
+    geometry_name?: string;
     name?: string;
     texture_width?: number;
     texture_height?: number;

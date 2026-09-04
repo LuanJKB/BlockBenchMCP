@@ -60,7 +60,7 @@ Security: loopback only; Bearer required; file export needs `propose_scoped_dire
 | ---------------------------------------- | ------------ |
 | `java_block`                             | P0           |
 | `geckolib_model` (needs GeckoLib plugin) | P0           |
-| Bedrock entity / geo                     | P1           |
+| `bedrock` / `bedrock_old` entities        | Supported    |
 | Generic free-model / mesh brush          | Out of scope |
 
 **Non-goals:** `trigger_action` / `emulate_clicks` / `risky_eval`, full paint UI, Hytale, etc.
@@ -141,7 +141,19 @@ cover enclosed areas and symmetry fixes. `audit_texture_quality` turns pixel-art
 rules into per-face findings for palette excess, weak base coverage, isolated
 pixels, flat fills, and optional transparent-glass edge/center alpha structure.
 
-Check `uv_mode` on `health` / `get_project_summary`: `java_block` → face; Bedrock-style → box.
+Check `uv_mode` on `health` / `get_project_summary`: `java_block` → face; Bedrock → preserve the project's box or per-face UV mode.
+
+## Bedrock workflow
+
+- Create a separate entity tab without GeckoLib: `create_project({format:"bedrock", name:"Costume", geometry_name:"costume", uv_mode:"face", texture_width:256, texture_height:256})`.
+- Use `bedrock_old` only when legacy export is required. UV modes unsupported by the installed format are rejected before creating a project.
+- Existing tabs are preserved. A missing native creation API fails rather than opening a wizard that could leave the reference active.
+- `update_elements` immediately refreshes transforms and visibility. Bone undo data is separate from cube undo data.
+- `transform_elements` transforms an entire selected subtree once, even if children are also selected. Coordinates are in the selected root's parent space. Rotation is composed around the requested pivot; non-uniform scale of rotated/inflated geometry is rejected because cuboids cannot represent shear.
+- `capture_views` uses an offscreen orthographic camera fitted to visible geometry, including bone rotations and inflation. It does not translate the model or change the user's camera.
+- Saving still requires `propose_scoped_directory` confirmation, desktop module permission, and `overwrite:true` for existing files. `save_project` writes editable `.bbmodel`; `export_model` uses the current Bedrock codec for geometry JSON. They are different deliverables.
+
+Validation: `npm test` includes shared contracts and mocked desktop-host regressions; `npm run typecheck` and `npm run build` validate the plugin. The destructive live smoke suite is **not** part of `npm test`: run it only with a disposable project. Reload `packages/plugin/dist/blockbench_mcp.js` in Blockbench to activate a newly built version; an already running MCP server continues using its loaded code until reload.
 
 ## Agent skill
 

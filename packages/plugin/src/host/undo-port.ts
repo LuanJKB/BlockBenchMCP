@@ -69,6 +69,11 @@ export function createUndoPort(): UndoPort {
       ) {
         delete initAspects.textures;
       }
+      const initialGroups = resolveUndoGroups([
+        ...(Array.isArray(aspects.groups) ? aspects.groups : []),
+        ...(Array.isArray(aspects.elements) ? aspects.elements : []),
+      ]);
+      if (initialGroups.length) initAspects.groups = initialGroups;
       Undo.initEdit(initAspects);
       try {
         const track: UndoTrack = {
@@ -113,8 +118,16 @@ export function createUndoPort(): UndoPort {
         };
         const result = fn(track);
         const finish: Record<string, unknown> = { ...initAspects };
-        const els = liveEls.length ? liveEls : resolveLive(createdEls);
-        const texs = liveTex.length ? liveTex : resolveLiveTextures(createdTex);
+        const els = resolveUndoElements([
+          ...(Array.isArray(initAspects.elements) ? initAspects.elements : []),
+          ...liveEls, ...createdEls,
+        ]);
+        const groups = resolveUndoGroups([...initialGroups, ...createdEls]);
+        if (groups.length) finish.groups = groups;
+        const texs = resolveUndoTextures([
+          ...(Array.isArray(initAspects.textures) ? initAspects.textures : []),
+          ...liveTex, ...createdTex,
+        ]);
         const animations = liveAnimations.length
           ? liveAnimations
           : resolveLiveAnimations(createdAnimations);
@@ -163,7 +176,10 @@ function resolveLive(refs: BbElementRef[]): unknown[] {
 function resolveUndoElements(values: unknown[]): unknown[] {
   const native = values.filter(hasUndoCopy);
   const refs = values.filter(isElementRef) as BbElementRef[];
-  return [...native, ...resolveLive(refs)].filter(uniqueIdentity);
+  return [...native, ...resolveLive(refs)]
+    .filter(hasUndoCopy)
+    .filter((value) => !resolveUndoGroups([value]).length)
+    .filter(uniqueIdentity);
 }
 
 function resolveUndoTextures(values: unknown[]): unknown[] {
@@ -216,4 +232,13 @@ function resolveLiveAnimations(refs: BbElementRef[]): unknown[] {
       ),
     )
     .filter(Boolean) as unknown[];
+}
+
+function resolveUndoGroups(values: unknown[]): unknown[] {
+  const groups = (globalThis as unknown as {
+    Group?: { all: Array<{ uuid: string }> };
+  }).Group?.all ?? [];
+  return values.filter(isElementRef)
+    .map((value) => groups.find((group) => group.uuid === value.uuid))
+    .filter(Boolean).filter(uniqueIdentity);
 }

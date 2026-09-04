@@ -3,17 +3,17 @@ export const GUIDE_MODELING = `
 # Modeling (Minecraft / Blockbench 5.1+)
 
 ## Mandatory workflow (do not skip)
-1. get_guide(modeling) then create_project(format).
+1. get_guide(modeling) then create_project(format). Bedrock entities: format="bedrock" (or "bedrock_old" for legacy exports), no GeckoLib plugin required. Supply uv_mode="face" or "box" explicitly when matching a reference; geometry_name sets the export identifier. Existing project tabs are preserved.
 2. Entities: scaffold_biped FIRST (correct pivots). Blocks: apply_geometry_batch.
 3. check_model immediately. Fix every error before texturing.
-4. Use measure_model instead of hand-calculating extents; it accounts for cube and parent rotations. Use transform_elements for relative edits, array_cubes/radial_array_cubes for bounded repetition, and duplicate_hierarchy for rig variants; audit_symmetry for explicit left/right pairs.
+4. Use measure_model instead of hand-calculating extents; it accounts for cube and parent rotations. Use transform_elements for relative edits, array_cubes/radial_array_cubes for bounded repetition, and duplicate_hierarchy for rig variants; audit_symmetry for explicit left/right pairs. Group transforms include all descendants, deduplicate selected parent/child refs, and use parent-space coordinates. Non-uniform scaling of rotated/inflated parts is rejected rather than introducing shear.
 5. When cube dimensions change, choose uv_policy preserve or auto deliberately. Re-run get_uv_layout before painting. Use transform_uv_islands for intentional island-level layout edits.
 6. Texturing: pack_box_uv → shade_model_base → paint_face_features. (scaffold_biped already packs in the project UV mode.)
-7. capture_views only after check_model is clean (max_edge 256). Use analyze_view_silhouette for numeric multi-view bounds and small-preview coverage.
+7. capture_views only after check_model is clean (max_edge 256). Screenshots automatically frame visible rotated/inflated geometry without moving the model or the selected camera. Use analyze_view_silhouette for numeric multi-view bounds and small-preview coverage.
 
 ## UV mode (do not mix blindly)
 - Read uv_mode from health / get_project_summary first.
-- java_block → per-face (face). Bedrock / skin / geckolib-style → box.
+- java_block → per-face (face). Bedrock supports box or face UV; preserve the reference project mode. Skin / geckolib-style usually uses box.
 - Geometry tools + pack_box_uv / auto_uv_cubes follow Project/Format; override only with mode box|face.
 - Never force box UV on a java_block project (and vice versa) unless you mean to.
 

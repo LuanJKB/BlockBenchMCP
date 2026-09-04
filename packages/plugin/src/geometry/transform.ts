@@ -21,6 +21,20 @@ function rotatePoint(point: Vec3, pivot: Vec3, rotation: Vec3): Vec3 {
   return [x + pivot[0], y + pivot[1], z + pivot[2]];
 }
 
+
+function composeRotation(current: Vec3, delta: Vec3): Vec3 {
+  const columns = ([[1, 0, 0], [0, 1, 0], [0, 0, 1]] as Vec3[]).map(
+    (axis) => rotatePoint(rotatePoint(axis, [0, 0, 0], current), [0, 0, 0], delta),
+  );
+  const pitch = Math.asin(Math.max(-1, Math.min(1, -columns[0][2])));
+  const regular = Math.abs(Math.cos(pitch)) > 1e-8;
+  return [
+    regular ? Math.atan2(columns[1][2], columns[2][2]) * 180 / Math.PI : 0,
+    pitch * 180 / Math.PI,
+    (regular ? Math.atan2(columns[0][1], columns[0][0]) : Math.atan2(-columns[1][0], columns[1][1])) * 180 / Math.PI,
+  ];
+}
+
 export function transformElements(opts: {
   refs: string[];
   translate?: Vec3;
@@ -31,64 +45,64 @@ export function transformElements(opts: {
   undo_label?: string;
 }): { ok: true; undo_label: string; updated: string[] } {
   requireProject();
-  const elements = opts.refs.map((ref) => {
+  const selected = [...new Set(opts.refs.map((ref) => {
     const element = findElement(ref);
-    if (!element)
-      throw new CommandError("E_NOT_FOUND", `Element not found: ${ref}`);
+    if (!element) throw new CommandError("E_NOT_FOUND", "Element not found: " + ref);
     return element;
+  }))];
+  const roots = selected.filter((element) => {
+    let parent = element.parent;
+    while (parent && parent !== "root") {
+      const group = typeof parent === "string" ? findElement(parent) : parent;
+      if (!group) break;
+      if (selected.includes(group)) return false;
+      parent = group.parent;
+    }
+    return true;
   });
+  const trees = roots.map((root) => {
+    const nodes: Array<Group | Cube> = [];
+    const visit = (element: Group | Cube) => {
+      nodes.push(element);
+      if (element instanceof Group) element.children.forEach(visit);
+    };
+    visit(root);
+    return { root, nodes };
+  });
+  const elements = trees.flatMap((tree) => tree.nodes);
   const translate = opts.translate ?? [0, 0, 0];
   const scale = opts.scale ?? [1, 1, 1];
   const rotate = opts.rotate ?? [0, 0, 0];
-  if (scale.some((value) => value <= 0))
-    throw new CommandError(
-      "E_INVALID_PARAM",
-      "Scale components must be positive; use mirror_elements for reflection",
-    );
   const pivot = opts.pivot ?? [0, 0, 0];
+  if (scale.some((value) => value <= 0)) {
+    throw new CommandError("E_INVALID_PARAM", "Scale components must be positive; use mirror_elements for reflection");
+  }
+  const uniform = scale.every((value) => Math.abs(value - scale[0]) < 1e-8);
+  if (!uniform && elements.some((element) => element.rotation.some((value) => Math.abs(value) > 1e-8) || (element instanceof Cube && element.inflate !== 0))) {
+    throw new CommandError("E_INVALID_PARAM", "Non-uniform scaling of rotated or inflated geometry would introduce shear; use uniform scale");
+  }
   const label = opts.undo_label ?? "transform_elements";
   return getHost().undo.run({ outliner: true, elements }, label, () => {
-    for (const element of elements) {
-      const transform = (point: Vec3): Vec3 => {
-        const scaled = point.map(
-          (value, i) => pivot[i] + (value - pivot[i]) * scale[i],
-        ) as Vec3;
-        const rotated = rotatePoint(scaled, pivot, rotate);
-        return rotated.map((value, i) => value + translate[i]) as Vec3;
-      };
-      if (element instanceof Cube) {
-        const center = element.from.map(
-          (value, i) => (value + element.to[i]) / 2,
-        ) as Vec3;
-        const nextCenter = transform(center);
-        const halfSize = element.from.map(
-          (value, i) =>
-            (Math.abs(element.to[i] - value) * Math.abs(scale[i])) / 2,
-        ) as Vec3;
-        element.from = nextCenter.map(
-          (value, i) => value - halfSize[i],
-        ) as Vec3;
-        element.to = nextCenter.map((value, i) => value + halfSize[i]) as Vec3;
-        element.origin = transform(element.origin as Vec3);
-        element.rotation = element.rotation.map(
-          (value, i) => value + rotate[i],
-        ) as Vec3;
-        if (opts.uv_policy === "auto") {
-          element.autouv = 1;
-          element.mapAutoUV?.();
+    for (const { root, nodes } of trees) {
+      const originalOrigin = [...root.origin] as Vec3;
+      const scaledOrigin = originalOrigin.map((value, axis) => pivot[axis] + (value - pivot[axis]) * scale[axis]) as Vec3;
+      const nextOrigin = rotatePoint(scaledOrigin, pivot, rotate).map((value, axis) => value + translate[axis]) as Vec3;
+      const reposition = (point: number[]) => point.map((value, axis) => nextOrigin[axis] + (value - originalOrigin[axis]) * scale[axis]) as Vec3;
+      for (const element of nodes) {
+        element.origin = reposition(element.origin);
+        if (element instanceof Cube) {
+          element.from = reposition(element.from);
+          element.to = reposition(element.to);
+          if (uniform) element.inflate *= scale[0];
+          if (opts.uv_policy === "auto") {
+            element.autouv = 1;
+            element.mapAutoUV?.();
+          }
         }
-      } else {
-        element.origin = transform(element.origin as Vec3);
-        element.rotation = element.rotation.map(
-          (value, i) => value + rotate[i],
-        ) as Vec3;
       }
+      root.rotation = composeRotation(root.rotation as Vec3, rotate);
     }
     refreshView(elements);
-    return {
-      ok: true as const,
-      undo_label: label,
-      updated: elements.map((e) => e.uuid),
-    };
+    return { ok: true as const, undo_label: label, updated: elements.map((element) => element.uuid) };
   });
 }

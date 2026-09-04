@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "esbuild src/main.ts --bundle --format=iife --platform=neutral --target=es2020 --outfile=dist/blockbench_mcp.js --legal-comments=none",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test tests/bedrock-host.test.mjs"
   },
   "dependencies": {
     "@blockbench-mcp/shared": "*",

@@ -1,114 +1,90 @@
 import type { PreviewPort } from "./ports.js";
 import { CommandError } from "../errors.js";
+import { boundsOfPoints, cubeWorldCorners } from "../geometry/spatial.js";
 
-const FALLBACK: Record<string, Record<string, unknown>> = {
-  north: {
-    id: "north",
-    projection: "orthogonal",
-    position: [0, 16, -64],
-    target: [0, 16, 0],
-  },
-  south: {
-    id: "south",
-    projection: "orthogonal",
-    position: [0, 16, 64],
-    target: [0, 16, 0],
-  },
-  east: {
-    id: "east",
-    projection: "orthogonal",
-    position: [64, 16, 0],
-    target: [0, 16, 0],
-  },
-  west: {
-    id: "west",
-    projection: "orthogonal",
-    position: [-64, 16, 0],
-    target: [0, 16, 0],
-  },
-  up: {
-    id: "up",
-    projection: "orthogonal",
-    position: [0, 64, 0],
-    target: [0, 16, 0],
-  },
-  down: {
-    id: "down",
-    projection: "orthogonal",
-    position: [0, -64, 0],
-    target: [0, 16, 0],
-  },
-  iso: {
-    id: "isometric",
-    projection: "orthogonal",
-    position: [40, 40, 40],
-    target: [0, 16, 0],
-  },
+type Vector = { set: (x: number, y: number, z: number) => unknown };
+type CapturePreview = {
+  loadAnglePreset: (preset: Record<string, unknown>) => void;
+  resize: (width: number, height: number) => void;
+  render?: () => void;
+  camOrtho?: {
+    left: number; right: number; top: number; bottom: number;
+    zoom: number; near: number; far: number;
+    up?: Vector;
+    updateProjectionMatrix: () => void;
+  };
 };
+
+export function framingPreset(view: string): { preset: Record<string, unknown>; span: number } {
+  const cubes = (globalThis as unknown as { Cube?: { all: Cube[] } }).Cube?.all ?? [];
+  const visible = cubes.filter((cube) => {
+    if (cube.visibility === false) return false;
+    let parent = cube.parent;
+    while (parent && parent !== "root" && typeof parent !== "string") {
+      if (parent.visibility === false) return false;
+      parent = parent.parent;
+    }
+    return true;
+  });
+  const corners = visible.flatMap(cubeWorldCorners);
+  const bounds = boundsOfPoints(corners);
+  const center = bounds.min.map((value, axis) => (value + bounds.max[axis]) / 2);
+  const radius = Math.max(1, ...corners.map((point) => Math.hypot(...point.map((value, axis) => value - center[axis]))));
+  const directions: Record<string, number[]> = {
+    north: [0, 0, -1], south: [0, 0, 1], east: [1, 0, 0], west: [-1, 0, 0],
+    up: [0, 1, 0.0001], down: [0, -1, 0.0001], iso: [1, 0.8, 1],
+  };
+  const direction = directions[view] ?? directions.iso;
+  const distance = radius * 4 + 64;
+  const length = Math.hypot(...direction);
+  return {
+    preset: {
+      projection: "orthographic",
+      position: center.map((value, axis) => value + direction[axis] / length * distance),
+      target: center,
+    },
+    span: radius * 2.3,
+  };
+}
 
 export function createPreviewPort(): PreviewPort {
   return {
     capture(view, size) {
       return new Promise((resolve, reject) => {
-        const g = globalThis as unknown as {
+        const screen = (globalThis as unknown as {
           Screencam?: {
-            NoAAPreview?: {
-              loadAnglePreset?: (p: unknown) => void;
-              resize?: (w: number, h: number) => void;
-            };
-            screenshotPreview?: (
-              preview: unknown,
-              opts: { width: number; height: number; crop?: boolean },
-              cb: (url: string) => void,
-            ) => void;
+            NoAAPreview?: CapturePreview;
+            screenshotPreview?: (preview: unknown, opts: Record<string, unknown>, callback: (url: string) => void) => void;
           };
-          Preview?: { selected?: unknown };
-          DefaultCameraPresets?: Array<
-            Record<string, unknown> & { id?: string }
-          >;
-        };
-        const preview = g.Screencam?.NoAAPreview ?? g.Preview?.selected;
-        if (!preview || !g.Screencam?.screenshotPreview) {
-          reject(
-            new CommandError(
-              "E_BLOCKBENCH_ERROR",
-              "Screenshot API missing (need desktop Blockbench 5.1+)",
-            ),
-          );
+        }).Screencam;
+        const preview = screen?.NoAAPreview;
+        if (!preview || !screen?.screenshotPreview) {
+          reject(new CommandError("E_BLOCKBENCH_ERROR", "Offscreen screenshot API unavailable; the user's selected camera is not modified"));
           return;
         }
-        const key = view === "iso" ? "isometric" : view;
-        const preset =
-          g.DefaultCameraPresets?.find((p) => p.id === key || p.id === view) ??
-          FALLBACK[view] ??
-          FALLBACK.iso;
-        g.Screencam.NoAAPreview?.loadAnglePreset?.(preset);
-        g.Screencam.NoAAPreview?.resize?.(size, size);
-        const t = setTimeout(
-          () => reject(new CommandError("E_TIMEOUT", "Screenshot timed out")),
-          20_000,
-        );
+        const timeout = setTimeout(() => reject(new CommandError("E_TIMEOUT", "Screenshot timed out")), 20_000);
         try {
-          g.Screencam.screenshotPreview(
-            preview,
-            { width: size, height: size, crop: false },
-            (url) => {
-              clearTimeout(t);
-              const image = new Image();
-              image.onload = () =>
-                resolve({
-                  dataUrl: url,
-                  width: image.naturalWidth || size,
-                  height: image.naturalHeight || size,
-                });
-              image.onerror = () =>
-                resolve({ dataUrl: url, width: size, height: size });
-              image.src = url;
-            },
-          );
-        } catch (err) {
-          clearTimeout(t);
-          reject(err);
+          const frame = framingPreset(view);
+          preview.resize(size, size);
+          preview.loadAnglePreset(frame.preset);
+          const camera = preview.camOrtho;
+          if (camera) {
+            camera.zoom = Math.min(camera.right - camera.left, camera.top - camera.bottom) / frame.span;
+            camera.near = 0.01;
+            camera.far = Math.max(1000, frame.span * 10 + 128);
+            camera.updateProjectionMatrix();
+          }
+          preview.render?.();
+          screen.screenshotPreview(preview, { width: size, height: size, crop: false }, (url) => {
+            clearTimeout(timeout);
+            const image = new Image();
+            image.onload = () => resolve({ dataUrl: url, width: image.naturalWidth || size, height: image.naturalHeight || size });
+            image.onerror = () => resolve({ dataUrl: url, width: size, height: size });
+            image.src = url;
+          });
+        } catch (error) {
+          clearTimeout(timeout);
+          reject(error);
         }
       });
     },

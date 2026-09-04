@@ -60,7 +60,7 @@ AI 客户端  --HTTP MCP-->  packages/plugin（Blockbench 内）
 | ------------------------------------ | ------ |
 | `java_block`                         | P0     |
 | `geckolib_model`（需 GeckoLib 插件） | P0     |
-| Bedrock entity / geo                 | P1     |
+| `bedrock` / `bedrock_old` 实体        | 已支持 |
 | 通用自由建模 / 网格刷子              | 不做   |
 
 **不做：** `trigger_action` / `emulate_clicks` / `risky_eval`、完整画笔 UI、Hytale 等。
@@ -135,3 +135,31 @@ PNG 导入导出只能访问经 `propose_scoped_directory` 明确确认的目录
 ## 许可证
 
 MIT
+
+## Bedrock 建模与本轮修复
+
+新建独立实体项目，无需安装 GeckoLib，保留已有模型标签页：
+
+```json
+{
+  "format": "bedrock",
+  "name": "国庆时装",
+  "geometry_name": "national_day_costume",
+  "uv_mode": "face",
+  "texture_width": 256,
+  "texture_height": 256
+}
+```
+
+将以上参数传给 `create_project`。`bedrock_old` 只用于旧版格式；不支持的 UV 模式会在新建前报错，不会悄悄转换参考模型。
+
+- 骨骼与方块分别写入正确的 Undo aspects，修复 `getUndoCopy is not a function`，并保留编辑前后的撤销数据。
+- `update_elements` 更新坐标、旋转、可见性后立即刷新模型和骨骼，无需重新打开文件。
+- `transform_elements` 对整个子树生效，父子重复选择只变换一次；坐标位于选中根节点的父级空间。旋转围绕指定枢轴复合；会产生剪切的非均匀缩放明确拒绝。
+- `capture_views` 按可见方块及其骨骼旋转、膨胀量自动取景；不移动模型，不改变用户的交互视角。
+- 文件操作支持插件作用域内的 `require`，不再仅依赖 `globalThis.require`。桌面模块权限、目录授权和显式覆盖保护仍保留，不绕过拒绝授权。
+- `save_project` 保存可编辑的 `.bbmodel`；`export_model` 使用当前 Bedrock codec 输出几何 JSON，不等同于打包完整资源包。
+
+验证命令：`npm test`、`npm run typecheck`、`npm run build`。新增宿主模拟回归测试覆盖上述故障，但不替代真实桌面端验收。不要在用户正在编辑的模型上运行破坏性的 `test:e2e`。
+
+构建产物为 `packages/plugin/dist/blockbench_mcp.js`。在 Blockbench 中重新加载该文件后，新能力才会进入 MCP 工具列表；本次代码修改不会自动重载插件或修改当前模型。

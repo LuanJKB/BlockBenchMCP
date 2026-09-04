@@ -156,6 +156,8 @@ export type MutationResult = z.infer<typeof mutationResultSchema>;
 export const createProjectParamsSchema = z
   .object({
     format: z.enum(PROJECT_FORMATS),
+    uv_mode: z.enum(["box", "face"]).optional(),
+    geometry_name: z.string().min(1).optional(),
     name: z.string().min(1).optional(),
     texture_width: z.number().int().positive().optional(),
     texture_height: z.number().int().positive().optional(),
