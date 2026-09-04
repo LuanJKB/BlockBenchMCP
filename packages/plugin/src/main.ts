@@ -10,6 +10,15 @@ const PROMPT_FLAG = "blockbench_mcp_prompt_start";
 let mcp: McpHandle | null = null;
 let disposeActions: (() => void) | null = null;
 const session = createSession();
+let loaded = false;
+let freshInstallPending = false;
+let loadGeneration = 0;
+let postLoadTimer: ReturnType<typeof setTimeout> | null = null;
+
+function cancelPostLoadStart(): void {
+  if (postLoadTimer !== null) clearTimeout(postLoadTimer);
+  postLoadTimer = null;
+}
 
 function startServer(): void {
   if (mcp?.running()) return;
@@ -31,7 +40,8 @@ function stopServer(): void {
 }
 
 /** Fresh install: ask before touching `net` (permission dialog often skips sync onload). */
-function promptStartAfterInstall(): void {
+function promptStartAfterInstall(generation: number): void {
+  if (!loaded || generation !== loadGeneration) return;
   const bb = bbBlockbench();
   const message =
     "Start the local MCP server now?\n\n" +
@@ -48,6 +58,7 @@ function promptStartAfterInstall(): void {
         cancel: 1,
       },
       (button) => {
+        if (!loaded || generation !== loadGeneration) return;
         if (button === 0) startServer();
         else {
           bb.showQuickMessage?.(
@@ -64,21 +75,26 @@ function promptStartAfterInstall(): void {
   const ok =
     typeof window !== "undefined" &&
     window.confirm("Start Blockbench MCP server now? (needs network permission)");
-  if (ok) startServer();
+  if (ok && loaded && generation === loadGeneration) startServer();
 }
 
 function schedulePostLoadStart(freshInstall: boolean): void {
-  const config = readPluginConfig();
-  // Defer so Load-from-File install UI finishes; otherwise `require('net')` may
-  // never show the permission dialog on first install.
-  const delayMs = freshInstall ? 400 : 80;
-  setTimeout(() => {
-    if (freshInstall) {
-      promptStartAfterInstall();
+  cancelPostLoadStart();
+  const generation = loadGeneration;
+  postLoadTimer = setTimeout(() => {
+    postLoadTimer = null;
+    if (!loaded || generation !== loadGeneration) return;
+    if (freshInstall || freshInstallPending) {
+      freshInstallPending = false;
+      try {
+        localStorage.removeItem(PROMPT_FLAG);
+      } catch {
+      }
+      promptStartAfterInstall(generation);
       return;
     }
-    if (config.autostart) startServer();
-  }, delayMs);
+    if (readPluginConfig().autostart) startServer();
+  }, freshInstall ? 400 : 80);
 }
 
 bbPlugin().register("blockbench_mcp", {
@@ -91,13 +107,17 @@ bbPlugin().register("blockbench_mcp", {
   variant: "desktop",
   min_version: MIN_BLOCKBENCH_VERSION,
   oninstall() {
+    freshInstallPending = true;
     try {
       localStorage.setItem(PROMPT_FLAG, "1");
     } catch {
       /* ignore */
     }
+    if (loaded) schedulePostLoadStart(true);
   },
   onload() {
+    loaded = true;
+    loadGeneration += 1;
     registerPluginSettings();
     disposeActions = registerMcpActions({
       getHandle: () => mcp,
@@ -105,12 +125,10 @@ bbPlugin().register("blockbench_mcp", {
       stop: stopServer,
     });
 
-    let freshInstall = false;
+    let freshInstall = freshInstallPending;
     try {
-      freshInstall = localStorage.getItem(PROMPT_FLAG) === "1";
-      if (freshInstall) localStorage.removeItem(PROMPT_FLAG);
+      freshInstall = freshInstall || localStorage.getItem(PROMPT_FLAG) === "1";
     } catch {
-      freshInstall = false;
     }
 
     schedulePostLoadStart(freshInstall);
@@ -120,6 +138,9 @@ bbPlugin().register("blockbench_mcp", {
     );
   },
   onunload() {
+    loaded = false;
+    loadGeneration += 1;
+    cancelPostLoadStart();
     disposeActions?.();
     disposeActions = null;
     stopServer();

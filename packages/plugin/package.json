@@ -1,12 +1,12 @@
 {
   "name": "@blockbench-mcp/plugin",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "esbuild src/main.ts --bundle --format=iife --platform=neutral --target=es2020 --outfile=dist/blockbench_mcp.js --legal-comments=none",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --test tests/bedrock-host.test.mjs"
+    "test": "node --test tests/bedrock-host.test.mjs tests/startup.test.mjs"
   },
   "dependencies": {
     "@blockbench-mcp/shared": "*",
