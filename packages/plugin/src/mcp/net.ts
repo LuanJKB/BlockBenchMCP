@@ -12,6 +12,7 @@ export type NetSocket = {
   write: (data: string | Uint8Array) => void;
   destroy: () => void;
   setTimeout: (ms: number, cb: () => void) => void;
+  remoteAddress?: string;
 };
 
 export type NetServer = {

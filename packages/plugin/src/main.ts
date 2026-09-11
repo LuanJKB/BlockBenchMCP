@@ -1,5 +1,9 @@
 import { MIN_BLOCKBENCH_VERSION, PLUGIN_VERSION } from "@blockbench-mcp/shared";
-import { readPluginConfig, registerPluginSettings } from "./config.js";
+import {
+  readPluginConfig,
+  registerPluginSettings,
+  regenerateSecret,
+} from "./config.js";
 import { createSession, revokeScope } from "./session.js";
 import { bbBlockbench, bbPlugin } from "./bb/globals.js";
 import { startMcpHttp, type McpHandle } from "./mcp/server.js";
@@ -24,6 +28,13 @@ function startServer(): void {
   if (mcp?.running()) return;
   mcp?.stop();
   const config = readPluginConfig();
+  if (!config.secret) {
+    bbBlockbench().showQuickMessage?.(
+      "MCP start failed: no secret token available",
+      5000,
+    );
+    return;
+  }
   try {
     mcp = startMcpHttp(config, session);
   } catch (err) {
@@ -36,7 +47,42 @@ function startServer(): void {
 function stopServer(): void {
   mcp?.stop();
   mcp = null;
+  revokeScope(session);
   bbBlockbench().showQuickMessage?.("MCP server stopped", 1500);
+}
+
+function handleRegenerateToken(): void {
+  try {
+    const newToken = regenerateSecret();
+    mcp?.rotateSecret(newToken);
+    const bb = bbBlockbench();
+    if (typeof bb.showMessageBox === "function") {
+      bb.showMessageBox(
+        {
+          title: "MCP Token Regenerated",
+          message:
+            "A new MCP token has been generated.\n\n" +
+            "Update your MCP client configuration with the new token.\n\n" +
+            `New token: ${newToken}`,
+          buttons: ["OK"],
+          confirm: 0,
+          cancel: 0,
+        },
+        () => {},
+      );
+    } else {
+      bb.showQuickMessage?.(
+        "MCP token regenerated. Update your client config.",
+        5000,
+      );
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    bbBlockbench().showQuickMessage?.(
+      `Token regeneration failed: ${message}`,
+      5000,
+    );
+  }
 }
 
 /** Fresh install: ask before touching `net` (permission dialog often skips sync onload). */
@@ -74,7 +120,9 @@ function promptStartAfterInstall(generation: number): void {
   // Fallback if showMessageBox is missing
   const ok =
     typeof window !== "undefined" &&
-    window.confirm("Start Blockbench MCP server now? (needs network permission)");
+    window.confirm(
+      "Start Blockbench MCP server now? (needs network permission)",
+    );
   if (ok && loaded && generation === loadGeneration) startServer();
 }
 
@@ -123,6 +171,7 @@ bbPlugin().register("blockbench_mcp", {
       getHandle: () => mcp,
       start: startServer,
       stop: stopServer,
+      regenerateToken: handleRegenerateToken,
     });
 
     let freshInstall = freshInstallPending;
