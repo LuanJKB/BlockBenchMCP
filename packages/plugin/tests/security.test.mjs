@@ -23,7 +23,7 @@ const result = await build({
 });
 const nativeRequire = createRequire(import.meta.url);
 const context = { require: name => context.load(name), load: nativeRequire, TextEncoder, TextDecoder, Uint8Array, ArrayBuffer, Buffer,
-  console, setTimeout, clearTimeout, btoa, atob, Project: {}, Blockbench: {showQuickMessage() {}}, settings: {}, Settings: { add() {}, save() {} } };
+  console, setTimeout, clearTimeout, btoa, atob, Project: {}, Blockbench: {showQuickMessage() {}}, settings: {}, Settings: { saveLocalStorages() {} } };
 runInNewContext(result.outputFiles[0].text,context);
 const api=context.api;
 const testRoot = process.env.BLOCKBENCH_MCP_TEST_ROOT ?? (process.platform === 'win32' ? 'C:/MinecraftDev/BlockBenchMCP-Test' : '/tmp/BlockBenchMCP-Test');
@@ -34,7 +34,7 @@ fs.mkdirSync(approved); fs.mkdirSync(outside);
 fs.writeFileSync(path.join(outside,'secret.txt'),'disposable-outside');
 after(()=>{ assert.equal(path.dirname(fixture),path.resolve(testRoot)); fs.rmSync(fixture,{recursive:true,force:true}); });
 beforeEach(()=>{
-  context.load=nativeRequire; context.Project={}; context.settings={}; context.Settings={add(){},save(){}};
+  context.load=nativeRequire; context.Project={}; context.settings={}; context.Settings={saveLocalStorages(){}};
   context.Codecs={project:{compile:()=>'{"meta":{"model_format":"java_block"}}'}};
   context.Format={id:'java_block',codec:{compile:()=>'{"elements":[]}'}};
   context.window={confirm:()=>false};
@@ -214,4 +214,20 @@ test('real TCP transport on loopback enforces auth, origin, rotation and stop',a
     state.scopedDirectory=approved;
   } finally {handle.stop();}
   assert.equal(state.scopedDirectory,null);assert.equal(handle.running(),false);
+});
+
+test('native Setting registration restores and persists secrets without Settings.add',()=>{
+  const stored={mcp_secret:'previous-private-token',mcp_port:39742,mcp_autostart:true};
+  const writes=[];
+  context.Setting=class {constructor(id,options){this.value=stored[id]??options.value;context.settings[id]=this;}};
+  context.Settings={saveLocalStorages(){writes.push(Object.fromEntries(Object.entries(context.settings).map(([k,v])=>[k,v.value])))}};
+  api.registerPluginSettings();assert.equal(api.readPluginConfig().secret,'previous-private-token');
+  assert.equal(api.readPluginConfig().port,39742);assert.equal(api.readPluginConfig().autostart,true);
+  delete stored.mcp_secret;delete stored.mcp_autostart;context.settings={};
+  api.registerPluginSettings();const token=api.readPluginConfig().secret;
+  assert.match(token,/^[a-f0-9]{64}$/);assert.equal(writes.at(-1).mcp_secret,token);assert.equal(api.readPluginConfig().autostart,false);
+  api.registerPluginSettings();assert.equal(api.readPluginConfig().secret,token);
+  stored.mcp_secret=token;context.settings={};api.registerPluginSettings();assert.equal(api.readPluginConfig().secret,token);
+  const rotated=api.regenerateSecret();assert.equal(writes.at(-1).mcp_secret,rotated);assert.notEqual(rotated,token);
+  context.settings={};assert.equal(api.readPluginConfig().secret,'');assert.throws(()=>api.regenerateSecret());
 });

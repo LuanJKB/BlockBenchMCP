@@ -8,21 +8,8 @@ export interface PluginRuntimeConfig {
   allowedOrigins?: string[];
 }
 
-type SettingsGlobal = {
-  add?: (id: string, setting: Record<string, unknown>) => void;
-  save?: () => void;
-};
-
-function getSettings(): SettingsGlobal {
-  return (globalThis as unknown as { Settings: SettingsGlobal }).Settings;
-}
-
 function persistSettings(): void {
-  try {
-    getSettings().save?.();
-  } catch {
-    /* Settings.save may not exist in all environments */
-  }
+  Settings.saveLocalStorages();
 }
 
 export function generateSecureToken(): string {
@@ -33,89 +20,43 @@ export function generateSecureToken(): string {
 }
 
 export function regenerateSecret(): string {
+  if (!settings.mcp_secret) throw new Error("MCP token setting is not registered");
   const token = generateSecureToken();
-  if (typeof settings !== "undefined" && settings?.mcp_secret) {
-    settings.mcp_secret.value = token;
-    persistSettings();
-  }
+  settings.mcp_secret.value = token;
+  persistSettings();
   return token;
 }
 
 export function readPluginConfig(): PluginRuntimeConfig {
   const portRaw = settings?.mcp_port?.value;
   let secretRaw = settings?.mcp_secret?.value;
-  const autoRaw = settings?.mcp_autostart?.value;
-  const port =
-    typeof portRaw === "number"
-      ? portRaw
-      : typeof portRaw === "string"
-        ? Number(portRaw)
-        : DEFAULTS.mcpPort;
-
-  if (
-    typeof secretRaw !== "string" ||
-    secretRaw.length === 0 ||
-    secretRaw === "dev-local-secret"
-  ) {
-    try {
-      secretRaw = generateSecureToken();
-      if (typeof settings !== "undefined" && settings?.mcp_secret) {
-        settings.mcp_secret.value = secretRaw;
-        persistSettings();
-      }
-    } catch {
-      secretRaw = "";
-    }
+  const port = typeof portRaw === "number" ? portRaw : typeof portRaw === "string" ? Number(portRaw) : DEFAULTS.mcpPort;
+  if (typeof secretRaw !== "string" || !secretRaw || secretRaw === "dev-local-secret") {
+    try { secretRaw = regenerateSecret(); }
+    catch { secretRaw = ""; } // Never start with a token the user cannot retrieve.
   }
-
   return {
     port: Number.isFinite(port) ? port : DEFAULTS.mcpPort,
     secret: typeof secretRaw === "string" ? secretRaw : "",
-    autostart: autoRaw === true,
+    autostart: settings?.mcp_autostart?.value === true,
     allowedOrigins: [],
   };
 }
 
 export function registerPluginSettings(): void {
-  const S = getSettings();
-  S.add?.("mcp_port", {
-    value: DEFAULTS.mcpPort,
-    category: "general",
-    name: "MCP Server Port",
-    description: "Loopback HTTP port for in-plugin MCP (127.0.0.1).",
-    type: "number",
+  // Blockbench 5.1 registers settings through the Setting constructor, not Settings.add.
+  // The constructor restores persisted values; migrate/generate only after that restoration.
+  if (!settings.mcp_port) new Setting("mcp_port", {
+    value: DEFAULTS.mcpPort, category: "general", name: "MCP Server Port",
+    description: "Loopback HTTP port for in-plugin MCP (127.0.0.1).", type: "number",
   });
-
-  let currentSecret = settings?.mcp_secret?.value;
-  if (
-    typeof currentSecret !== "string" ||
-    currentSecret.length === 0 ||
-    currentSecret === "dev-local-secret"
-  ) {
-    try {
-      currentSecret = generateSecureToken();
-    } catch {
-      currentSecret = "";
-    }
-  }
-
-  S.add?.("mcp_secret", {
-    value: currentSecret,
-    category: "general",
-    name: "MCP Shared Secret",
-    description: "Bearer token Cursor must send as Authorization: Bearer …",
-    type: "text",
+  if (!settings.mcp_secret) new Setting("mcp_secret", {
+    value: "", category: "general", name: "MCP Shared Secret",
+    description: "Generated bearer token for local MCP clients.", type: "text",
   });
-  if (settings?.mcp_secret && currentSecret) {
-    settings.mcp_secret.value = currentSecret;
-    persistSettings();
-  }
-
-  S.add?.("mcp_autostart", {
-    value: false,
-    category: "general",
-    name: "Start MCP Server automatically",
-    description: "Listen for Cursor/AI as soon as the plugin loads.",
-    type: "toggle",
+  if (!settings.mcp_autostart) new Setting("mcp_autostart", {
+    value: false, category: "general", name: "Start MCP Server automatically",
+    description: "Listen for local MCP clients when the plugin loads.", type: "toggle",
   });
+  readPluginConfig();
 }

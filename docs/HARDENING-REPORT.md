@@ -114,3 +114,13 @@ Candidato 0.6.2-hardened.1:
 O usuário deve abrir Blockbench Desktop com um projeto descartável e carregar este bundle via File → Plugins → Load Plugin from File. Confirmar apenas permissões necessárias (crypto, rede e fs/path quando solicitado). Confirmar nome/versão do plugin e avisar se aparece alguma mensagem de erro. Não aprovar scope automaticamente.
 
 Depois da confirmação de carregamento, continuar a fase 14 e smoke/negativos das fases 27–28 do plano original. A aprovação humana de C:\MinecraftDev\BlockBenchMCP-Test é outra pausa obrigatória. Após os testes reais, atualizar este relatório, checksum se o bundle mudar, e concluir a revisão do PR.
+
+## Live validation update — settings persistence correction
+
+The user confirmed the plugin loaded and the MCP ready message appeared. Five live negative checks passed on the previous candidate: missing token 401, wrong token 401, hostile Origin 403, hostile OPTIONS 403 and foreign Host 403, all without permissive CORS.
+
+Authenticated live testing uncovered a registration defect inherited from upstream: Settings.add does not exist in the declared Blockbench 5.1 Setting API, so the server could generate a token without registering/persisting a user-visible setting. The local ambient declaration and mocks incorrectly represented this API. Corrected config.ts to use new Setting (restoring stored values before migration), Settings.saveLocalStorages, and fail closed if the token setting is missing. Corrected types/blockbench-ambient.d.ts and startup mocks; added a regression for native registration, restoration, defaults and rotation persistence. No modeling changes.
+
+Updated candidate: typecheck PASS; npm test PASS (37 shared + 50 plugin = 87); test:security PASS (16); build PASS. SHA-256: f28bd48c83b02d96fc5a2b07c2fad9a14157e6dc9861b769a10518deec3f3c96. This supersedes the earlier candidate checksum and counts; earlier CI links validate the earlier code only. Additional changed file: packages/plugin/src/types/blockbench-ambient.d.ts (correct native Setting/Settings declarations).
+
+Next required action: user reloads the corrected bundle from the same path and starts MCP again, then confirms readiness. The user explicitly authorized reading only the plugin mcp_secret from Blockbench storage and using it in memory without printing or storing it elsewhere; that authorization remains in effect. Live scope approval is still pending and must be performed by the user for C:\MinecraftDev\BlockBenchMCP-Test only. Authenticated modeling, save/export, visual/editability and lifecycle live tests remain pending.

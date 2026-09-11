@@ -37,7 +37,8 @@ function fixture({ autoLoad = true, blockedStorage = false, autostart = true, st
   const context = {
     Plugin: { register(id, options) { hooks = options; if (autoLoad) hooks.onload(); } },
     Blockbench: { showQuickMessage() {}, showMessageBox(options, callback) { dialogs.push({ options, callback }); } },
-    Settings: { add() {} },
+    Settings: { saveLocalStorages() {} },
+    Setting: class { constructor(id, options) { this.value = options.value; context.settings[id] = this; } },
     settings: { mcp_autostart: { value: autostart } },
     Action: class { constructor(id, options) { actions.set(id, options); } setName() {} delete() {} },
     localStorage: {
