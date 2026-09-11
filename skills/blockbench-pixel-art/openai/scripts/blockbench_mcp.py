@@ -11,9 +11,12 @@ def endpoint():
     return (configured[:-4], configured) if configured.endswith("/mcp") else (configured, configured + "/mcp")
 def request_json(url, body=None):
     headers = {"Accept": "application/json"}; data = None
+    secret = os.environ.get("BLOCKBENCH_MCP_SECRET", "")
+    if not secret:
+        raise ValueError("Set BLOCKBENCH_MCP_SECRET to your generated token from Blockbench settings")
+    headers["Authorization"] = f"Bearer {secret}"
     if body is not None:
-        secret = os.environ.get("BLOCKBENCH_MCP_SECRET", "dev-local-secret")
-        headers.update({"Content-Type": "application/json", "Authorization": f"Bearer {secret}"})
+        headers["Content-Type"] = "application/json"
         data = json.dumps(body, separators=(",", ":")).encode("utf-8")
     req = urllib.request.Request(url, data=data, headers=headers, method="POST" if data else "GET")
     with urllib.request.urlopen(req, timeout=30) as response:

@@ -31,3 +31,22 @@ Audit realizado na baseline upstream `b99e581d48f997d3763e827aef34eede0456574b` 
    - `proposeScopedDirectory` (`scope-export.ts`)
 
 Todas as operações de filesystem identificadas passam exclusivamente por `scope-export.ts`. O hardening de resolução de paths concentrado em `scope-export.ts` cobre 100% da superfície de I/O do MCP.
+
+## Continuation findings and implemented controls
+
+The inherited seven-file patch was incomplete: rotation persisted settings but left the running secret unchanged; crypto had fallbacks contrary to the plan; an approved root could be recanonicalized after redirection; dangling redirects were mistaken for missing paths; overwrite used an exists/write race; validation preceded codec execution; and HTTP health/DELETE escaped authentication. These gaps were corrected before live testing.
+
+| Surface | Final control |
+|---|---|
+| config.ts / main.ts / mcp/actions.ts | node:crypto only, legacy-token migration, explicit token action updates running handle, autostart opt-in |
+| mcp/server.ts / net.ts | timingSafeEqual, exact Host/port, expected loopback peer, all endpoints authenticated except validated preflight, no wildcard |
+| mcp/http-server.ts | one dispatch per connection, reject duplicate headers/transfer encoding/invalid length, retain 8 MiB cap |
+| commands/scope-export.ts | centralized logical + physical containment, pinned canonical root path, lstat dangling redirects, revalidate after codecs, O_EXCL and O_NOFOLLOW where available |
+| texture/png-io.ts | unchanged modeling code, readScopedBinary/writeScopedBinary enforce identical controls |
+| session.ts / main.ts / mcp/server.ts | approvals revoked on handle start/stop and plugin lifecycle |
+| mcp/rpc.ts / dispatch.ts / shared commands | unchanged explicit dispatch; full 59-tool input-schema snapshot plus unknown command denial |
+| Python CLI helper | remove public fallback and authenticate health too; local environment token required |
+
+Source search covered createServer/listen, Authorization/Bearer/Origin/Host, fs/read/write/mkdir/rename/copy/realpath/lstat, scope, save/export and PNG. Only scope-export.ts performs plugin disk I/O; host/node-modules.ts grants module access and host/live.ts probes capability but does not read/write files. Python scripts are explicitly invoked local clients, not remotely callable generic filesystem tools. No new runtime dependency, shell execution, eval or modeling API was added.
+
+See SECURITY.md for residual TOCTOU/hard-link and denial-of-service boundaries, and VALIDATION.md for pending live gates.

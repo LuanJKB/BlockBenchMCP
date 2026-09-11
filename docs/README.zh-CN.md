@@ -5,6 +5,8 @@
 
 # BlockBenchMCP
 
+> Unofficial hardened fork: build this branch from source. Upstream release bundles do not include the security patch. Autostart is off; start MCP explicitly. See [Security Model](../SECURITY.md) and [validation](VALIDATION.md).
+
 面向 Minecraft 的 **[Model Context Protocol](https://modelcontextprotocol.io/)**，以 **纯 Blockbench 桌面插件** 形式运行（≥ 5.1.0）。
 
 安装插件 → 插件在本机 `127.0.0.1` 拉起 HTTP MCP → Cursor / 其他客户端用 URL 连接。**不需要单独的 Node 适配器进程。**关 Blockbench = MCP 停用。
@@ -18,7 +20,7 @@
 从源码构建：
 
 ```bash
-git clone https://github.com/SwagRee/BlockBenchMCP.git
+git clone --branch hardening/security-v1 https://github.com/LuanJKB/BlockBenchMCP.git
 cd BlockBenchMCP
 npm install && npm run build
 ```
@@ -28,14 +30,14 @@ npm install && npm run build
 1. Blockbench：**File → Plugins → Load Plugin from File**（下载文件或构建产物）
 2. 首次若弹出 **network / net** 权限，选 Always allow
 3. 默认监听：`http://127.0.0.1:39741/mcp`（也可 Tools → Start / Stop MCP Server）
-4. 设置可改端口 / Bearer（默认 `dev-local-secret`）
+4. 设置可改端口 / Bearer（随机生成，见 MCP Shared Secret）
 
 ## 连接 Cursor
 
 ```json
 {
   "url": "http://127.0.0.1:39741/mcp",
-  "headers": { "Authorization": "Bearer dev-local-secret" }
+  "headers": { "Authorization": "Bearer <YOUR_RANDOM_TOKEN>" }
 }
 ```
 
