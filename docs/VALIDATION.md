@@ -19,3 +19,7 @@ Final hardened results and checksum are recorded after the clean pipeline. The s
 7. Record actual results, final SHA-256 and any remaining limitations before release.
 
 No live E2E or visual functionality is claimed from mocked tests. No scope was approved in the actual Blockbench instance by this agent.
+
+## Automated results recorded
+
+Windows local: npm ci, typecheck, all 86 tests, explicit 15 security tests, build PASS. CI Node 22 Windows/Ubuntu PASS: https://github.com/LuanJKB/BlockBenchMCP/actions/runs/34606213771 . No security test skipped. Candidate SHA-256: 7885a1c560cce50a9e462de5503cfa94d3c431b7d4e98c0bcd08846c380a70b9. Full inventory and gate details: HARDENING-REPORT.md. Live acceptance remains pending.
