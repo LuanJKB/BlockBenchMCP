@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { runInNewContext } from "node:vm";
+import { createRequire } from "node:module";
 import { build } from "esbuild";
 
 const result = await build({
@@ -14,7 +15,7 @@ const result = await build({
     name: "mock-http-listener",
     setup(builder) {
       builder.onLoad({ filter: /[\\/]mcp[\\/]server\.ts$/ }, () => ({
-        contents: "export function startMcpHttp() { return globalThis.testStartServer(); }",
+        contents: "export function startMcpHttp(config, session) { return globalThis.testStartServer(config, session); }",
         loader: "ts",
       }));
     },
@@ -25,6 +26,9 @@ const source = result.outputFiles[0].text;
 function fixture({ autoLoad = true, blockedStorage = false, autostart = true, storedFlag = false } = {}) {
   let hooks;
   let starts = 0;
+  let activeSession;
+  let activeToken;
+  const actions = new Map();
   let stops = 0;
   let nextTimer = 0;
   const timers = new Map();
@@ -35,7 +39,7 @@ function fixture({ autoLoad = true, blockedStorage = false, autostart = true, st
     Blockbench: { showQuickMessage() {}, showMessageBox(options, callback) { dialogs.push({ options, callback }); } },
     Settings: { add() {} },
     settings: { mcp_autostart: { value: autostart } },
-    Action: class { setName() {} delete() {} },
+    Action: class { constructor(id, options) { actions.set(id, options); } setName() {} delete() {} },
     localStorage: {
       getItem(key) { if (blockedStorage) throw new Error("blocked"); return storage.get(key) ?? null; },
       setItem(key, value) { if (blockedStorage) throw new Error("blocked"); storage.set(key, value); },
@@ -43,16 +47,19 @@ function fixture({ autoLoad = true, blockedStorage = false, autostart = true, st
     },
     setTimeout(callback, delay) { const id = ++nextTimer; timers.set(id, { callback, delay }); return id; },
     clearTimeout(id) { timers.delete(id); },
-    testStartServer() {
-      starts++;
-      return { port: 39741, running: () => true, stop: () => { stops++; } };
+    testStartServer(config, session) {
+      starts++; activeSession = session; activeToken = config.secret;
+      let running = true;
+      return { port: 39741, running: () => running, stop: () => { stops++; running = false; }, rotateSecret: value => { activeToken = value; } };
     },
+    require: createRequire(import.meta.url),
     console,
   };
   runInNewContext(source, context);
   return {
     get hooks() { return hooks; }, get starts() { return starts; }, get stops() { return stops; },
-    dialogs, timers, storage, context,
+    dialogs, timers, storage, context, actions,
+    get session() { return activeSession; }, get token() { return activeToken; },
     flush() {
       const pending = [...timers.entries()].sort((left, right) => left[1].delay - right[1].delay);
       for (const [id, timer] of pending) { if (timers.delete(id)) timer.callback(); }
@@ -123,4 +130,21 @@ test("repeated install callbacks replace timers rather than duplicating prompts"
 test("start preference is read at execution time", () => {
   const app = fixture(); app.context.settings.mcp_autostart.value = false; app.flush();
   assert.equal(app.starts, 0);
+});
+
+test("token UI rotation updates the running handle and persistent setting", () => {
+  const app = fixture(); app.context.settings.mcp_secret = { value: "old-configured-token" }; app.flush();
+  assert.equal(app.token, "old-configured-token");
+  app.actions.get("blockbench_mcp_regenerate_token").click();
+  assert.notEqual(app.token, "old-configured-token");
+  assert.equal(app.context.settings.mcp_secret.value, app.token);
+  assert.match(app.token, /^[a-f0-9]{64}$/);
+});
+
+test("UI stop and plugin unload revoke scope before a subsequent start", () => {
+  const app = fixture(); app.flush(); app.session.scopedDirectory = "/test-approved";
+  app.actions.get("blockbench_mcp_toggle").click(); assert.equal(app.session.scopedDirectory, null);
+  app.actions.get("blockbench_mcp_toggle").click(); assert.equal(app.session.scopedDirectory, null);
+  app.session.scopedDirectory = "/test-approved"; app.hooks.onunload(); assert.equal(app.session.scopedDirectory, null);
+  app.hooks.onload(); app.flush(); assert.equal(app.session.scopedDirectory, null);
 });

@@ -1,0 +1,3085 @@
+[
+  {
+    "name": "health",
+    "description": "Plugin MCP status: listening, Blockbench version, current format.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_formats",
+    "description": "List model formats currently registered in Blockbench, including plugin formats.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "allowed_uv_overlaps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "a": {
+                "type": "object",
+                "properties": {
+                  "cube": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "face": {
+                    "type": "string",
+                    "enum": [
+                      "north",
+                      "south",
+                      "east",
+                      "west",
+                      "up",
+                      "down"
+                    ]
+                  }
+                },
+                "required": [
+                  "cube",
+                  "face"
+                ],
+                "additionalProperties": false
+              },
+              "b": {
+                "type": "object",
+                "properties": {
+                  "cube": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "face": {
+                    "type": "string",
+                    "enum": [
+                      "north",
+                      "south",
+                      "east",
+                      "west",
+                      "up",
+                      "down"
+                    ]
+                  }
+                },
+                "required": [
+                  "cube",
+                  "face"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "a",
+              "b"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 256
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "get_project_summary",
+    "description": "Compact outliner + counts. Prefer over screenshots for situational awareness.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "get_elements",
+    "description": "Read exact cube/group geometry, hierarchy, visibility, UV rectangles, rotations, and texture references.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maxItems": 256
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "measure_model",
+    "description": "Measure model or subtree bounds, size, center, cube count, and summed volume.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maxItems": 256
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "audit_symmetry",
+    "description": "Compare explicit left/right cube or group pairs across an axis and report coordinate error.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "pairs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "left": {
+                "type": "string",
+                "minLength": 1
+              },
+              "right": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "left",
+              "right"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 128
+        },
+        "axis": {
+          "type": "string",
+          "enum": [
+            "x",
+            "y",
+            "z"
+          ]
+        },
+        "pivot": {
+          "type": "number"
+        },
+        "tolerance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 16
+        }
+      },
+      "required": [
+        "pairs"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "analyze_view_silhouette",
+    "description": "Capture views and return deterministic silhouette bounds, coverage, and preview images for visual QA.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "views": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "iso",
+              "north",
+              "south",
+              "east",
+              "west",
+              "up",
+              "down"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 7
+        },
+        "max_edge": {
+          "type": "integer",
+          "minimum": 64,
+          "maximum": 512
+        },
+        "alpha_threshold": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "luminance_threshold": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "list_textures",
+    "description": "List project textures with UUID, name, and bitmap dimensions.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "list_animations",
+    "description": "List project animations with name, length, and loop mode.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "check_model",
+    "description": "Audit overlaps, empty groups, zero-size cubes, bad pivots, untextured faces. Call after geometry batches.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "capture_views",
+    "description": "Low-res multi-angle screenshots. Default max_edge 256 jpeg. Use sparingly after check_model.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "views": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "north",
+              "south",
+              "east",
+              "west",
+              "up",
+              "down",
+              "iso"
+            ]
+          },
+          "minItems": 1
+        },
+        "max_edge": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 1024
+        },
+        "format": {
+          "type": "string",
+          "enum": [
+            "jpeg",
+            "png"
+          ]
+        },
+        "quality": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "get_guide",
+    "description": "Playbook before building. Topics: modeling|texturing|animation|java_block|geckolib. ALWAYS call modeling first for entities.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "topic": {
+          "type": "string",
+          "enum": [
+            "modeling",
+            "texturing",
+            "animation",
+            "java_block",
+            "geckolib"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "create_project",
+    "description": "Create java_block, bedrock, bedrock_old, or geckolib_model project (closes nothing silently — requires format).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": [
+            "java_block",
+            "bedrock",
+            "bedrock_old",
+            "geckolib_model"
+          ]
+        },
+        "uv_mode": {
+          "type": "string",
+          "enum": [
+            "box",
+            "face"
+          ]
+        },
+        "geometry_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "texture_width": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        },
+        "texture_height": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "format"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "set_project_meta",
+    "description": "Update project name, geometry identifier, or texture resolution in one undo.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "geometry_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "texture_width": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 4096
+        },
+        "texture_height": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 4096
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "apply_geometry_batch",
+    "description": "Create/delete groups+cubes in ONE undo. All-or-nothing. Prefer for multi-part shapes.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "create_groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "origin": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "rotation": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "parent": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "create_cubes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "from": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "to": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "origin": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "rotation": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "inflate": {
+                "type": "number"
+              },
+              "parent": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "from",
+              "to"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "delete_uuids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "undo_label": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "update_elements",
+    "description": "Batch rename, transform, resize, reparent, or show/hide existing cubes and groups in ONE undo.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "updates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "parent": {
+                "type": "string",
+                "minLength": 1
+              },
+              "from": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "to": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "origin": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "rotation": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "inflate": {
+                "type": "number"
+              },
+              "visibility": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "ref"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 256
+        },
+        "undo_label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "uv_policy": {
+          "type": "string",
+          "enum": [
+            "preserve",
+            "auto"
+          ]
+        }
+      },
+      "required": [
+        "updates"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "transform_elements",
+    "description": "Translate, scale, and rotate multiple cubes/groups around one pivot in a single undo.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 256
+        },
+        "translate": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "scale": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "pivot": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "rotate": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "uv_policy": {
+          "type": "string",
+          "enum": [
+            "preserve",
+            "auto"
+          ]
+        },
+        "undo_label": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "refs"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "array_cubes",
+    "description": "Create a bounded linear array of cubes with shared or auto-remapped UVs in one undo.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 64
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 128
+        },
+        "offset": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "name_pattern": {
+          "type": "string",
+          "minLength": 1
+        },
+        "uv_policy": {
+          "type": "string",
+          "enum": [
+            "share",
+            "auto"
+          ]
+        },
+        "parent": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "sources",
+        "count",
+        "offset"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "radial_array_cubes",
+    "description": "Create a bounded radial array of cubes around a pivot with shared or regenerated UVs.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 128
+        },
+        "axis": {
+          "type": "string",
+          "enum": [
+            "x",
+            "y",
+            "z"
+          ]
+        },
+        "pivot": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "angle": {
+          "type": "number",
+          "minimum": -360,
+          "maximum": 360
+        },
+        "rotate_cubes": {
+          "type": "boolean"
+        },
+        "name_pattern": {
+          "type": "string",
+          "minLength": 1
+        },
+        "uv_policy": {
+          "type": "string",
+          "enum": [
+            "share",
+            "auto"
+          ]
+        },
+        "parent": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "sources",
+        "count",
+        "pivot"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "duplicate_hierarchy",
+    "description": "Deep-copy one group subtree while preserving hierarchy, cube properties, and explicit UV policy.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "root": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name_suffix": {
+          "type": "string",
+          "minLength": 1
+        },
+        "translate": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "parent": {
+          "type": "string",
+          "minLength": 1
+        },
+        "uv_policy": {
+          "type": "string",
+          "enum": [
+            "share",
+            "auto"
+          ]
+        }
+      },
+      "required": [
+        "root"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "create_limb",
+    "description": "Bone+cube with pivot at joint. Optional X mirror (arm_left/arm_right). Prefer for characters.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parent": {
+          "type": "string"
+        },
+        "pivot": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "size": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "from": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "mirror": {
+          "type": "string",
+          "enum": [
+            "none",
+            "x"
+          ]
+        },
+        "undo_label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "pivot",
+        "size"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "scaffold_biped",
+    "description": "BEST START for humanoids: Steve-like biped bones+cubes+64² texture with correct pivots. Prefer over hand-placing limbs.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "scale": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 4
+        },
+        "texture_size": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 256
+        },
+        "name_prefix": {
+          "type": "string"
+        },
+        "include_outer_layers": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "ensure_texture",
+    "description": "Create or reuse a project texture (default 64×64 solid fill).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "width": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 1024
+        },
+        "height": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 1024
+        },
+        "fill": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "auto_uv_cubes",
+    "description": "Auto-UV cubes. mode auto|box|face (default auto from Project/Format: java_block→face, Bedrock→box). Prefer pack_box_uv for unique islands.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "cubes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "box",
+            "face",
+            "auto"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "get_uv_layout",
+    "description": "Inspect the atlas as semantic face islands: UV rect, flips, rotation, model-face texel size/density, bounds, and overlaps.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "cubes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maxItems": 256
+        },
+        "include_overlaps": {
+          "type": "boolean"
+        },
+        "allowed_overlaps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "a": {
+                "type": "string",
+                "enum": [
+                  "north",
+                  "south",
+                  "east",
+                  "west",
+                  "up",
+                  "down"
+                ]
+              },
+              "b": {
+                "type": "string",
+                "enum": [
+                  "north",
+                  "south",
+                  "east",
+                  "west",
+                  "up",
+                  "down"
+                ]
+              },
+              "cube_a": {
+                "type": "string",
+                "minLength": 1
+              },
+              "cube_b": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "a",
+              "b",
+              "cube_a",
+              "cube_b"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 256
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "get_uv_map",
+    "description": "Render the selected texture with UV island borders and optional cube.face labels as a native MCP image preview.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "texture": {
+          "type": "string"
+        },
+        "cubes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maxItems": 256
+        },
+        "max_edge": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 1024
+        },
+        "labels": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "get_face_grid",
+    "description": "Read exact face-local texels as RGBA rows while honoring rotated and flipped UVs.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "cube": {
+          "type": "string",
+          "minLength": 1
+        },
+        "face": {
+          "type": "string",
+          "enum": [
+            "north",
+            "south",
+            "east",
+            "west",
+            "up",
+            "down"
+          ]
+        },
+        "texture": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "cube",
+        "face"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "get_texture_region",
+    "description": "Return a nearest-neighbor zoom of one face or atlas region with checkerboard and pixel grid.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "texture": {
+          "type": "string"
+        },
+        "face": {
+          "type": "object",
+          "properties": {
+            "cube": {
+              "type": "string",
+              "minLength": 1
+            },
+            "face": {
+              "type": "string",
+              "enum": [
+                "north",
+                "south",
+                "east",
+                "west",
+                "up",
+                "down"
+              ]
+            }
+          },
+          "required": [
+            "cube",
+            "face"
+          ],
+          "additionalProperties": false
+        },
+        "rect": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            }
+          ]
+        },
+        "scale": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 64
+        },
+        "grid": {
+          "type": "boolean"
+        },
+        "checkerboard": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "analyze_texture_palette",
+    "description": "Count exact RGBA colors and transparency for a texture or one face.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "texture": {
+          "type": "string"
+        },
+        "face": {
+          "type": "object",
+          "properties": {
+            "cube": {
+              "type": "string",
+              "minLength": 1
+            },
+            "face": {
+              "type": "string",
+              "enum": [
+                "north",
+                "south",
+                "east",
+                "west",
+                "up",
+                "down"
+              ]
+            }
+          },
+          "required": [
+            "cube",
+            "face"
+          ],
+          "additionalProperties": false
+        },
+        "max_colors": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 256
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "get_texture_revision",
+    "description": "Return a deterministic bitmap revision token for conflict-safe read-modify-write workflows.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "texture": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "audit_texture_quality",
+    "description": "Audit per-face palette size, dominant base ratio, isolated pixels, flat fills, and optional glass alpha structure.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "texture": {
+          "type": "string"
+        },
+        "faces": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "cube": {
+                "type": "string",
+                "minLength": 1
+              },
+              "face": {
+                "type": "string",
+                "enum": [
+                  "north",
+                  "south",
+                  "east",
+                  "west",
+                  "up",
+                  "down"
+                ]
+              }
+            },
+            "required": [
+              "cube",
+              "face"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 256
+        },
+        "palette_limit": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 256
+        },
+        "min_base_ratio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "glass": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "set_face_uv",
+    "description": "Set exact per-face UV rectangles and optional quarter-turn rotation for multiple cube faces in ONE undo.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "cube": {
+                "type": "string",
+                "minLength": 1
+              },
+              "face": {
+                "type": "string",
+                "enum": [
+                  "north",
+                  "south",
+                  "east",
+                  "west",
+                  "up",
+                  "down"
+                ]
+              },
+              "uv": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 4,
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "rotation": {
+                "type": "number",
+                "enum": [
+                  0,
+                  90,
+                  180,
+                  270
+                ]
+              }
+            },
+            "required": [
+              "cube",
+              "face",
+              "uv"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 1536
+        }
+      },
+      "required": [
+        "entries"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "transform_uv_islands",
+    "description": "Translate, scale, or quarter-turn selected UV faces around a shared pivot in one undo.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "faces": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "cube": {
+                "type": "string",
+                "minLength": 1
+              },
+              "face": {
+                "type": "string",
+                "enum": [
+                  "north",
+                  "south",
+                  "east",
+                  "west",
+                  "up",
+                  "down"
+                ]
+              }
+            },
+            "required": [
+              "cube",
+              "face"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 256
+        },
+        "translate": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "scale": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          ]
+        },
+        "pivot": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "rotate": {
+          "type": "string",
+          "enum": [
+            "0",
+            "90",
+            "180",
+            "270"
+          ]
+        },
+        "clamp_to_texture": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "faces"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "pack_box_uv",
+    "description": "Pack unique UV islands before shade/paint. Auto-detects box vs per-face (java_block→face). Optional mode box|face|auto; auto_resize grows atlas.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "cubes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "texture": {
+          "type": "string"
+        },
+        "padding": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        },
+        "auto_resize": {
+          "type": "boolean"
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "box",
+            "face",
+            "auto"
+          ]
+        },
+        "preserve_others": {
+          "type": "boolean"
+        },
+        "power_of_two": {
+          "type": "boolean"
+        },
+        "max_size": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 4096
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "resize_texture",
+    "description": "Resize a texture with nearest-neighbor sampling and optionally rescale all UV coordinates in ONE undo.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "texture": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 4096
+        },
+        "height": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 4096
+        },
+        "rescale_uvs": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "width",
+        "height"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "shade_model_base",
+    "description": "BEST texture base: assign texture, region colors by name regex, soft face lighting + mottle + blur (sosadly-style). Then paint features.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "cubes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "texture": {
+          "type": "string"
+        },
+        "base": {
+          "type": "string",
+          "minLength": 1
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "match": {
+                "type": "string",
+                "minLength": 1
+              },
+              "color": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "match",
+              "color"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "top_light": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "bottom_dark": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "noise": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "blur": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "edge_darken": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "integer"
+        },
+        "crisp": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "mirror_elements",
+    "description": "Mirror named groups/cubes across an axis with smart rename.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "names": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "axis": {
+          "type": "string",
+          "enum": [
+            "x",
+            "y",
+            "z"
+          ]
+        },
+        "pivot": {
+          "type": "number"
+        },
+        "rename": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "names"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "paint_face_feature",
+    "description": "Paint one rect/ellipse/fill in face-local UV space. Prefer paint_face_features for batches.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "cube": {
+          "type": "string",
+          "minLength": 1
+        },
+        "face": {
+          "type": "string",
+          "enum": [
+            "north",
+            "south",
+            "east",
+            "west",
+            "up",
+            "down"
+          ]
+        },
+        "feature": {
+          "type": "string",
+          "enum": [
+            "rect",
+            "ellipse",
+            "fill"
+          ]
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "color": {
+          "type": "string",
+          "minLength": 1
+        },
+        "texture": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "cube",
+        "face",
+        "feature",
+        "x",
+        "y",
+        "width",
+        "height",
+        "color"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "paint_face_features",
+    "description": "Batch face-local paint ops (fill/rect/ellipse/line) in ONE undo — eyes, mouth, trim across many faces.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "texture": {
+          "type": "string"
+        },
+        "faces": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "cube": {
+                "type": "string",
+                "minLength": 1
+              },
+              "face": {
+                "type": "string",
+                "enum": [
+                  "north",
+                  "south",
+                  "east",
+                  "west",
+                  "up",
+                  "down"
+                ]
+              },
+              "ops": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "fill",
+                        "rect",
+                        "ellipse",
+                        "line"
+                      ]
+                    },
+                    "x": {
+                      "type": "number"
+                    },
+                    "y": {
+                      "type": "number"
+                    },
+                    "width": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    "height": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    "x2": {
+                      "type": "number"
+                    },
+                    "y2": {
+                      "type": "number"
+                    },
+                    "color": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "color"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "cube",
+              "face",
+              "ops"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "faces"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "paint_pixel_batch",
+    "description": "Batch pixel brush paths in face-local UV space. Square/circle brushes, clipped to each face by default, in ONE undo.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "texture": {
+          "type": "string"
+        },
+        "strokes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "cube": {
+                "type": "string",
+                "minLength": 1
+              },
+              "face": {
+                "type": "string",
+                "enum": [
+                  "north",
+                  "south",
+                  "east",
+                  "west",
+                  "up",
+                  "down"
+                ]
+              },
+              "color": {
+                "type": "string",
+                "minLength": 1
+              },
+              "points": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "y": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 4096
+              },
+              "size": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 32
+              },
+              "shape": {
+                "type": "string",
+                "enum": [
+                  "square",
+                  "circle"
+                ]
+              }
+            },
+            "required": [
+              "cube",
+              "face",
+              "color",
+              "points"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 256
+        },
+        "clip_to_face": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "strokes"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "paint_face_grid",
+    "description": "Write palette-indexed face-sized texel grids exactly, including transparent erase, in one undo.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "texture": {
+          "type": "string"
+        },
+        "expected_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "faces": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "cube": {
+                "type": "string",
+                "minLength": 1
+              },
+              "face": {
+                "type": "string",
+                "enum": [
+                  "north",
+                  "south",
+                  "east",
+                  "west",
+                  "up",
+                  "down"
+                ]
+              },
+              "rows": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1,
+                "maxItems": 4096
+              }
+            },
+            "required": [
+              "cube",
+              "face",
+              "rows"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 256
+        },
+        "palette": {
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "faces",
+        "palette"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "edit_texture_pixels",
+    "description": "Set or erase exact atlas or face-local RGBA pixels in one undo.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "texture": {
+          "type": "string"
+        },
+        "expected_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "face": {
+          "type": "object",
+          "properties": {
+            "cube": {
+              "type": "string",
+              "minLength": 1
+            },
+            "face": {
+              "type": "string",
+              "enum": [
+                "north",
+                "south",
+                "east",
+                "west",
+                "up",
+                "down"
+              ]
+            }
+          },
+          "required": [
+            "cube",
+            "face"
+          ],
+          "additionalProperties": false
+        },
+        "pixels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "y": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "color": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "color"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 16384
+        }
+      },
+      "required": [
+        "pixels"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "replace_texture_color",
+    "description": "Replace or erase a color globally or on one face with bounded RGBA tolerance.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "texture": {
+          "type": "string"
+        },
+        "expected_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "face": {
+          "type": "object",
+          "properties": {
+            "cube": {
+              "type": "string",
+              "minLength": 1
+            },
+            "face": {
+              "type": "string",
+              "enum": [
+                "north",
+                "south",
+                "east",
+                "west",
+                "up",
+                "down"
+              ]
+            }
+          },
+          "required": [
+            "cube",
+            "face"
+          ],
+          "additionalProperties": false
+        },
+        "from": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tolerance": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "copy_face_pixels",
+    "description": "Copy face pixels to another face with optional mirror and quarter-turn rotation.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "texture": {
+          "type": "string"
+        },
+        "expected_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "object",
+          "properties": {
+            "cube": {
+              "type": "string",
+              "minLength": 1
+            },
+            "face": {
+              "type": "string",
+              "enum": [
+                "north",
+                "south",
+                "east",
+                "west",
+                "up",
+                "down"
+              ]
+            }
+          },
+          "required": [
+            "cube",
+            "face"
+          ],
+          "additionalProperties": false
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "cube": {
+              "type": "string",
+              "minLength": 1
+            },
+            "face": {
+              "type": "string",
+              "enum": [
+                "north",
+                "south",
+                "east",
+                "west",
+                "up",
+                "down"
+              ]
+            }
+          },
+          "required": [
+            "cube",
+            "face"
+          ],
+          "additionalProperties": false
+        },
+        "flip_x": {
+          "type": "boolean"
+        },
+        "flip_y": {
+          "type": "boolean"
+        },
+        "rotation": {
+          "type": "string",
+          "enum": [
+            "0",
+            "90",
+            "180",
+            "270"
+          ]
+        }
+      },
+      "required": [
+        "source",
+        "target"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "flood_fill_texture",
+    "description": "Flood-fill a bounded face-local or atlas region with tolerance, transparency, and pixel caps.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "texture": {
+          "type": "string"
+        },
+        "expected_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "face": {
+          "type": "object",
+          "properties": {
+            "cube": {
+              "type": "string",
+              "minLength": 1
+            },
+            "face": {
+              "type": "string",
+              "enum": [
+                "north",
+                "south",
+                "east",
+                "west",
+                "up",
+                "down"
+              ]
+            }
+          },
+          "required": [
+            "cube",
+            "face"
+          ],
+          "additionalProperties": false
+        },
+        "x": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "color": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tolerance": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "diagonal": {
+          "type": "boolean"
+        },
+        "max_pixels": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 65536
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "color"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "transform_texture_region",
+    "description": "Flip or quarter-turn a full face or bounded atlas region without resampling.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "texture": {
+          "type": "string"
+        },
+        "expected_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "face": {
+          "type": "object",
+          "properties": {
+            "cube": {
+              "type": "string",
+              "minLength": 1
+            },
+            "face": {
+              "type": "string",
+              "enum": [
+                "north",
+                "south",
+                "east",
+                "west",
+                "up",
+                "down"
+              ]
+            }
+          },
+          "required": [
+            "cube",
+            "face"
+          ],
+          "additionalProperties": false
+        },
+        "rect": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            }
+          ]
+        },
+        "operation": {
+          "type": "string",
+          "enum": [
+            "flip_x",
+            "flip_y",
+            "rotate_180",
+            "rotate_90",
+            "rotate_270"
+          ]
+        }
+      },
+      "required": [
+        "operation"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "import_texture_png",
+    "description": "Import a PNG only from the user-approved scoped directory into a texture.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\.png$"
+        },
+        "texture": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resize_project": {
+          "type": "boolean"
+        },
+        "expected_revision": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "export_texture_png",
+    "description": "Export a texture as original-resolution PNG inside the user-approved scoped directory.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\.png$"
+        },
+        "texture": {
+          "type": "string"
+        },
+        "overwrite": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "get_texture",
+    "description": "Inspect the texture sheet as a compact PNG data_url (default max_edge 256).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "texture": {
+          "type": "string"
+        },
+        "max_edge": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 1024
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "assign_texture",
+    "description": "Assign an existing texture to cubes, optionally limited to selected faces, in ONE undo.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "texture": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cubes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 256
+        },
+        "faces": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "north",
+              "south",
+              "east",
+              "west",
+              "up",
+              "down"
+            ]
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "texture",
+        "cubes"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "audit_material_set",
+    "description": "Validate base/emissive/normal/specular texture channel dimensions, power-of-two sizes, and naming.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "channels": {
+          "type": "object",
+          "properties": {
+            "base": {
+              "type": "string",
+              "minLength": 1
+            },
+            "emissive": {
+              "type": "string",
+              "minLength": 1
+            },
+            "normal": {
+              "type": "string",
+              "minLength": 1
+            },
+            "specular": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "base"
+          ],
+          "additionalProperties": false
+        },
+        "require_power_of_two": {
+          "type": "boolean"
+        },
+        "naming_prefix": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "channels"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "ensure_material_set",
+    "description": "Create or reuse a bounded base/emissive/normal/specular texture set with channel-appropriate fills.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "prefix": {
+          "type": "string",
+          "minLength": 1
+        },
+        "width": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 1024
+        },
+        "height": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 1024
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "base",
+              "emissive",
+              "normal",
+              "specular"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 4
+        },
+        "fills": {
+          "type": "object",
+          "properties": {
+            "base": {
+              "type": "string",
+              "minLength": 1
+            },
+            "emissive": {
+              "type": "string",
+              "minLength": 1
+            },
+            "normal": {
+              "type": "string",
+              "minLength": 1
+            },
+            "specular": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "prefix",
+        "width",
+        "height",
+        "channels"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "inspect_animation",
+    "description": "Read exact bone animation channels, key times, and vector values for safe iterative editing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "upsert_animation",
+    "description": "Create/replace a real bone animation clip with rotation/position/scale keys and linear/catmullrom/step interpolation.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "length": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "loop": {
+          "type": "string",
+          "enum": [
+            "once",
+            "hold",
+            "loop"
+          ]
+        },
+        "bones": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "rotation": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "time": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "value": {
+                      "type": "array",
+                      "minItems": 3,
+                      "maxItems": 3,
+                      "items": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "number"
+                        }
+                      ]
+                    },
+                    "interpolation": {
+                      "type": "string",
+                      "enum": [
+                        "linear",
+                        "catmullrom",
+                        "step"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "time",
+                    "value"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "position": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "time": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "value": {
+                      "type": "array",
+                      "minItems": 3,
+                      "maxItems": 3,
+                      "items": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "number"
+                        }
+                      ]
+                    },
+                    "interpolation": {
+                      "type": "string",
+                      "enum": [
+                        "linear",
+                        "catmullrom",
+                        "step"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "time",
+                    "value"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "scale": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "time": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "value": {
+                      "type": "array",
+                      "minItems": 3,
+                      "maxItems": 3,
+                      "items": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "number"
+                        }
+                      ]
+                    },
+                    "interpolation": {
+                      "type": "string",
+                      "enum": [
+                        "linear",
+                        "catmullrom",
+                        "step"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "time",
+                    "value"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "replace": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "length"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "transform_animation_keys",
+    "description": "Retiming, value scaling, and axis-aware mirroring for bounded animation bone keyframes in one undo.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bones": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 128
+        },
+        "time_scale": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "time_offset": {
+          "type": "number",
+          "minimum": -3600,
+          "maximum": 3600
+        },
+        "value_scale": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "mirror_axis": {
+          "type": "string",
+          "enum": [
+            "x",
+            "y",
+            "z"
+          ]
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "delete_animation",
+    "description": "Delete one animation by name in a single undo step.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "propose_scoped_directory",
+    "description": "Ask user to allow session file access under an absolute directory.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "save_project",
+    "description": "Compile the open project as a real .bbmodel inside the confirmed scoped directory. overwrite must be explicit.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\.bbmodel$"
+        },
+        "overwrite": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "name": "export_model",
+    "description": "Compile the open model through its active format codec into the confirmed scoped directory. overwrite must be explicit.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "overwrite": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  }
+]
