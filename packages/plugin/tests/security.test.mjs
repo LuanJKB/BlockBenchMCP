@@ -231,3 +231,14 @@ test('native Setting registration restores and persists secrets without Settings
   const rotated=api.regenerateSecret();assert.equal(writes.at(-1).mcp_secret,rotated);assert.notEqual(rotated,token);
   context.settings={};assert.equal(api.readPluginConfig().secret,'');assert.throws(()=>api.regenerateSecret());
 });
+
+test('Blockbench restricted fs fails closed with an actionable compatibility error',()=>{
+  let touched=false, confirmed=false;
+  const restricted={existsSync(){return true},statSync(){return {isDirectory:()=>true}},readFileSync(){touched=true},writeFileSync(){touched=true}};
+  context.load=name=>name==='fs'?restricted:nativeRequire(name);
+  context.window.confirm=()=>{confirmed=true;return true};
+  assert.throws(()=>api.proposeScopedDirectory({scopedDirectory:null},approved),e=>e.code==='E_BLOCKBENCH_ERROR'&&/compatible host/.test(e.message));
+  assert.throws(()=>api.writeScopedBinary(session(),path.join(approved,'blocked'),new Uint8Array()),e=>e.code==='E_BLOCKBENCH_ERROR');
+  denied(()=>api.writeScopedBinary({scopedDirectory:null},path.join(approved,'blocked'),new Uint8Array()));
+  assert.equal(touched,false);assert.equal(confirmed,false);
+});

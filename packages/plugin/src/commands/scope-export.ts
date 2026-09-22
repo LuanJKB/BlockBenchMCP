@@ -22,7 +22,16 @@ type PathApi = {
   sep: string;
 };
 type CodecApi = { compile?: () => unknown };
-const fsApi = () => requireNodeModule<FsApi>("fs");
+function fsApi(): FsApi {
+  const fs = requireNodeModule<FsApi>("fs");
+  if (typeof fs.realpathSync !== "function" || typeof fs.lstatSync !== "function" ||
+      typeof fs.openSync !== "function" || typeof fs.closeSync !== "function" ||
+      typeof fs.constants?.O_EXCL !== "number") {
+    throw new CommandError("E_BLOCKBENCH_ERROR",
+      "This Blockbench host does not expose the filesystem APIs required for secure scope containment (realpath/lstat/open/close/constants). File access is disabled; a compatible host is required. The requested directory is not the cause.");
+  }
+  return fs;
+}
 const pathApi = () => requireNodeModule<PathApi>("path");
 const denied = (message: string): never => { throw new CommandError("E_SCOPE_DENIED", message); };
 
@@ -53,6 +62,7 @@ function approvedRoot(session: SessionState, fs: FsApi, paths: PathApi): string 
 
 /** All MCP disk I/O uses physical containment; dangling redirects fail closed. */
 export function resolveScopedPath(session: SessionState, path: string): string {
+  if (!session.scopedDirectory) return denied("Call propose_scoped_directory first and get user approval.");
   const fs = fsApi(), paths = pathApi();
   const root = approvedRoot(session, fs, paths);
   if (!paths.isAbsolute(path) || path.includes("\0")) return denied("Destination path must be absolute.");
@@ -89,8 +99,8 @@ export function readScopedBinary(session: SessionState, path: string): Uint8Arra
 function writeScoped(
   session: SessionState, path: string, data: string | Uint8Array, overwrite?: boolean,
 ): { path: string; bytes: number } {
-  const fs = fsApi(), paths = pathApi();
   let target = resolveScopedPath(session, path);
+  const fs = fsApi(), paths = pathApi();
   const parent = paths.dirname(target);
   const missing: string[] = [];
   let ancestor = parent;
