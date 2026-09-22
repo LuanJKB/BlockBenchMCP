@@ -11,11 +11,15 @@ export type HttpRequest = {
   body: string;
 };
 
-export type HttpHandler = (req: HttpRequest, socket: NetSocket) => void | Promise<void>;
+export type HttpHandler = (
+  req: HttpRequest,
+  socket: NetSocket,
+) => void | Promise<void>;
 
 function concatChunks(chunks: Uint8Array[]): Uint8Array {
-  const BufferCtor = (globalThis as { Buffer?: { concat: (c: Uint8Array[]) => Uint8Array } })
-    .Buffer;
+  const BufferCtor = (
+    globalThis as { Buffer?: { concat: (c: Uint8Array[]) => Uint8Array } }
+  ).Buffer;
   if (BufferCtor?.concat) return BufferCtor.concat(chunks);
   let len = 0;
   for (const c of chunks) len += c.length;
@@ -47,6 +51,7 @@ export function writeHttp(
   status: number,
   body: string | undefined,
   extraHeaders?: HttpHeaders,
+  corsOrigin?: string,
 ): void {
   const statusText =
     status === 200
@@ -57,29 +62,41 @@ export function writeHttp(
           ? "No Content"
           : status === 401
             ? "Unauthorized"
-            : status === 404
-              ? "Not Found"
-              : status === 405
-                ? "Method Not Allowed"
-                : status === 400
-                  ? "Bad Request"
-                  : "Error";
+            : status === 403
+              ? "Forbidden"
+              : status === 404
+                ? "Not Found"
+                : status === 405
+                  ? "Method Not Allowed"
+                  : status === 400
+                    ? "Bad Request"
+                    : "Error";
   const payload = body ?? "";
   const headers: string[] = [
     `HTTP/1.1 ${status} ${statusText}`,
     "Connection: close",
-    "Access-Control-Allow-Origin: *",
-    "Access-Control-Allow-Headers: Content-Type, Authorization, Mcp-Session-Id, mcp-session-id",
-    "Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE",
   ];
+  if (corsOrigin) {
+    headers.push(`Access-Control-Allow-Origin: ${corsOrigin}`);
+    headers.push("Vary: Origin");
+    headers.push(
+      "Access-Control-Allow-Headers: Content-Type, Authorization, Mcp-Session-Id, mcp-session-id",
+    );
+    headers.push("Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE");
+  }
   if (extraHeaders) {
-    for (const [k, v] of Object.entries(extraHeaders)) headers.push(`${k}: ${v}`);
+    for (const [k, v] of Object.entries(extraHeaders))
+      headers.push(`${k}: ${v}`);
   }
   if (body !== undefined) {
     headers.push("Content-Type: application/json; charset=utf-8");
     const byteLen =
-      (globalThis as { Buffer?: { byteLength: (s: string, e: string) => number } }).Buffer
-        ?.byteLength?.(payload, "utf8") ?? new TextEncoder().encode(payload).length;
+      (
+        globalThis as {
+          Buffer?: { byteLength: (s: string, e: string) => number };
+        }
+      ).Buffer?.byteLength?.(payload, "utf8") ??
+      new TextEncoder().encode(payload).length;
     headers.push(`Content-Length: ${byteLen}`);
   } else {
     headers.push("Content-Length: 0");
@@ -96,6 +113,7 @@ export function attachHttpServer(net: NetModule, handler: HttpHandler) {
   return net.createServer((socket) => {
     const chunks: Uint8Array[] = [];
     let received = 0;
+    let dispatched = false;
     let headersDone = false;
     let method = "GET";
     let path = "/";
@@ -104,6 +122,7 @@ export function attachHttpServer(net: NetModule, handler: HttpHandler) {
     const headers: HttpHeaders = {};
 
     socket.on("data", ((chunk: Uint8Array) => {
+      if (dispatched) return;
       received += chunk.length;
       if (received > MAX_BODY) {
         socket.destroy();
@@ -125,28 +144,36 @@ export function attachHttpServer(net: NetModule, handler: HttpHandler) {
         path = parts[1] || "/";
         for (let i = 1; i < lines.length; i++) {
           const c = lines[i].indexOf(":");
-          if (c <= 0) continue;
+          if (c <= 0) { dispatched = true; writeHttp(socket, 400, undefined); return; }
           const key = lines[i].slice(0, c).trim().toLowerCase();
           const val = lines[i].slice(c + 1).trim();
+          if (Object.prototype.hasOwnProperty.call(headers, key) || key === "transfer-encoding" ||
+              (key === "content-length" && !/^\d+$/.test(val))) {
+            dispatched = true; writeHttp(socket, 400, undefined); return;
+          }
           headers[key] = val;
-          if (key === "content-length") contentLength = parseInt(val, 10) || 0;
+          if (key === "content-length") contentLength = Number(val);
+          if (!Number.isSafeInteger(contentLength) || contentLength > MAX_BODY) {
+            dispatched = true; socket.destroy(); return;
+          }
         }
         headersDone = true;
       }
 
       if (headersDone && buffer.length >= headerLength + contentLength) {
+        dispatched = true;
         const body = new TextDecoder().decode(
           buffer.slice(headerLength, headerLength + contentLength),
         );
-        void Promise.resolve(handler({ method, path, headers, body }, socket)).catch(
-          () => {
-            try {
-              writeHttp(socket, 500, JSON.stringify({ error: "internal" }));
-            } catch {
-              /* ignore */
-            }
-          },
-        );
+        void Promise.resolve(
+          handler({ method, path, headers, body }, socket),
+        ).catch(() => {
+          try {
+            writeHttp(socket, 500, JSON.stringify({ error: "internal" }));
+          } catch {
+            /* ignore */
+          }
+        });
       }
     }) as (...args: never[]) => void);
 

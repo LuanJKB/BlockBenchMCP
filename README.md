@@ -13,29 +13,29 @@ Intent-level tools (`scaffold_biped`, `check_model`, …) — not a thin UI mirr
 
 ## Install
 
-**Artifact (recommended):** download `blockbench_mcp.js` from [GitHub Releases](https://github.com/SwagRee/BlockBenchMCP/releases).
+**Hardened candidate:** build this fork from source. Upstream release bundles do not contain this hardening. Live acceptance is pending; see [validation](docs/VALIDATION.md).
 
 From source:
 
 ```bash
-git clone https://github.com/SwagRee/BlockBenchMCP.git
+git clone --branch hardening/security-v1 https://github.com/LuanJKB/BlockBenchMCP.git
 cd BlockBenchMCP
-npm install && npm run build
+npm ci && npm run typecheck && npm test && npm run build
 ```
 
 Output: `packages/plugin/dist/blockbench_mcp.js`.
 
 1. Blockbench: **File → Plugins → Load Plugin from File**
-2. Allow **network / net** when prompted
-3. Listens on `http://127.0.0.1:39741/mcp` (or Tools → Start / Stop MCP Server)
-4. Settings: port + Bearer (default `dev-local-secret`)
+2. Allow the necessary desktop modules when prompted: **net**, **node:crypto**, and **fs/path** for approved disk I/O.
+3. Start explicitly with **Start MCP Server**; it listens on `http://127.0.0.1:39741/mcp`. Autostart is disabled by default.
+4. Settings: port + Bearer (generated random token in MCP Shared Secret)
 
 ## Cursor
 
 ```json
 {
   "url": "http://127.0.0.1:39741/mcp",
-  "headers": { "Authorization": "Bearer dev-local-secret" }
+  "headers": { "Authorization": "Bearer <YOUR_RANDOM_TOKEN>" }
 }
 ```
 
@@ -162,3 +162,15 @@ Pixel-art modeling playbook: [`skills/blockbench-pixel-art/openai`](./skills/blo
 ## License
 
 MIT
+
+## Security Model (unofficial hardened fork)
+
+Version: 0.6.2-hardened.1. Upstream: SwagRee/BlockBenchMCP, commit b99e581d48f997d3763e827aef34eede0456574b. Fork changes: security hardening only.
+
+The server binds only to loopback, uses a generated 256-bit bearer token, denies browser origins by default, and disables autostart by default. Start it explicitly and copy the token from MCP Shared Secret into your local client configuration. Regenerate MCP Token immediately invalidates the old token for new requests. Never commit your real token. Health requests also require Authorization.
+
+Disk access requires human confirmation of a dedicated directory, for example <mod-project>/blockbench-work/. Approvals are session-scoped and cleared on stop/restart or unload. Canonical realpath containment and symlink/junction checks protect all disk I/O. Existing files require overwrite:true. Use absolute paths, as in upstream.
+
+For local acceptance tests, approve only C:\MinecraftDev\BlockBenchMCP-Test. Do not approve whole drives, home folders, Desktop, Documents or the whole repository. Before loading the generated plugin, use a disposable Blockbench project and confirm its necessary desktop module permissions. Follow [validation status](docs/VALIDATION.md); successful builds alone do not constitute live acceptance.
+
+See [SECURITY.md](SECURITY.md), [security audit](docs/SECURITY-AUDIT.md), [baseline](docs/UPSTREAM-BASELINE.md) and [dependency review](docs/DEPENDENCY-REVIEW.md) for boundaries and evidence. No new runtime dependencies were added.

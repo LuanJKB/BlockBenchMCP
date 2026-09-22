@@ -1,0 +1,775 @@
+[
+  {
+    "name": "health",
+    "args": {},
+    "summary": "Plugin MCP running",
+    "ok": true,
+    "result": {
+      "protocol_version": 1,
+      "plugin_version": "0.6.2-hardened.1",
+      "blockbench_version": "5.1.6",
+      "format": null,
+      "uv_mode": "face",
+      "capabilities": [
+        "geometry",
+        "textures",
+        "screenshots",
+        "painter",
+        "animations"
+      ],
+      "mode": "in-process"
+    }
+  },
+  {
+    "name": "create_project",
+    "args": {
+      "format": "java_block",
+      "name": "hardened_live_disposable",
+      "texture_width": 64,
+      "texture_height": 64
+    },
+    "summary": "OK: create_project",
+    "ok": true,
+    "result": {
+      "ok": true,
+      "undo_label": "create_project java_block",
+      "format": "java_block",
+      "name": "hardened_live_disposable"
+    }
+  },
+  {
+    "name": "apply_geometry_batch",
+    "args": {
+      "create_groups": [
+        {
+          "name": "test_assembly",
+          "origin": [
+            0,
+            8,
+            0
+          ]
+        }
+      ],
+      "create_cubes": [
+        {
+          "name": "body",
+          "parent": "test_assembly",
+          "from": [
+            -4,
+            0,
+            -2
+          ],
+          "to": [
+            4,
+            8,
+            2
+          ],
+          "origin": [
+            0,
+            4,
+            0
+          ],
+          "rotation": [
+            0,
+            22.5,
+            0
+          ]
+        }
+      ]
+    },
+    "summary": "OK: apply_geometry_batch",
+    "ok": true,
+    "result": {
+      "ok": true,
+      "undo_label": "apply_geometry_batch",
+      "created": [
+        {
+          "uuid": "14111c4f-99e9-943f-8514-40714ada2720",
+          "name": "test_assembly",
+          "type": "group"
+        },
+        {
+          "uuid": "cec37071-3b86-d11d-103a-ab4047c43eee",
+          "name": "body",
+          "type": "cube"
+        }
+      ],
+      "deleted": []
+    }
+  },
+  {
+    "name": "check_model",
+    "args": {},
+    "summary": "OK: check_model",
+    "ok": true,
+    "result": {
+      "findings": [
+        {
+          "severity": "warn",
+          "code": "UV_OVERLAP",
+          "message": "15 unintended overlapping UV face pair(s) detected: body.north↔body.south, body.north↔body.east, body.north↔body.west. Review get_uv_layout before painting."
+        }
+      ],
+      "summary": {
+        "cubes": 1,
+        "groups": 1,
+        "errors": 0,
+        "warns": 1
+      }
+    }
+  },
+  {
+    "name": "ensure_texture",
+    "args": {
+      "name": "live_base",
+      "width": 64,
+      "height": 64,
+      "fill": "#acb6c0"
+    },
+    "summary": "OK: ensure_texture",
+    "ok": true,
+    "result": {
+      "ok": true,
+      "undo_label": "ensure_texture",
+      "created": [
+        {
+          "uuid": "c6cd888e-2637-145a-7614-ead69f259986",
+          "name": "live_base",
+          "width": 64,
+          "height": 64
+        }
+      ]
+    }
+  },
+  {
+    "name": "pack_box_uv",
+    "args": {
+      "cubes": [
+        "body"
+      ],
+      "texture": "live_base",
+      "mode": "face",
+      "auto_resize": false
+    },
+    "summary": "OK: pack_box_uv",
+    "ok": true,
+    "result": {
+      "ok": true,
+      "undo_label": "pack_box_uv",
+      "mode": "face",
+      "packed": 1,
+      "used": [
+        46,
+        8
+      ],
+      "texture_size": [
+        64,
+        64
+      ]
+    }
+  },
+  {
+    "name": "capture_views",
+    "args": {
+      "views": [
+        "north",
+        "south",
+        "iso"
+      ],
+      "max_edge": 256,
+      "format": "png"
+    },
+    "summary": "OK: capture_views",
+    "ok": true,
+    "result": {
+      "views": [
+        {
+          "view": "north",
+          "visible_face": "north",
+          "width": 256,
+          "height": 256,
+          "bytes": 2394,
+          "mime": "image/png"
+        },
+        {
+          "view": "south",
+          "visible_face": "south",
+          "width": 256,
+          "height": 256,
+          "bytes": 2391,
+          "mime": "image/png"
+        },
+        {
+          "view": "iso",
+          "visible_face": null,
+          "width": 256,
+          "height": 256,
+          "bytes": 2736,
+          "mime": "image/png"
+        }
+      ]
+    }
+  },
+  {
+    "name": "paint_face_grid",
+    "args": {
+      "texture": "live_base",
+      "faces": [
+        {
+          "cube": "body",
+          "face": "north",
+          "rows": [
+            "aaaaaaaa",
+            "aaaaaaaa",
+            "aaaaaaaa",
+            "aaaaaaaa",
+            "aaaaaaaa",
+            "aaaaaaaa",
+            "aaaaaaaa",
+            "aaaaaaaa"
+          ]
+        }
+      ],
+      "palette": {
+        "a": "#4f86c6"
+      }
+    },
+    "summary": "OK: paint_face_grid",
+    "ok": true,
+    "result": {
+      "ok": true,
+      "undo_label": "paint_face_grid",
+      "faces": 1,
+      "pixels": 64,
+      "revision": "fnv1a32:29c29e95"
+    }
+  },
+  {
+    "name": "get_face_grid",
+    "args": {
+      "texture": "live_base",
+      "cube": "body",
+      "face": "north"
+    },
+    "summary": "OK: get_face_grid",
+    "ok": true,
+    "result": {
+      "cube": "body",
+      "face": "north",
+      "width": 8,
+      "height": 8,
+      "rows": [
+        [
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff"
+        ],
+        [
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff"
+        ],
+        [
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff"
+        ],
+        [
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff"
+        ],
+        [
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff"
+        ],
+        [
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff"
+        ],
+        [
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff"
+        ],
+        [
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff",
+          "#4f86c6ff"
+        ]
+      ],
+      "revision": "fnv1a32:29c29e95"
+    }
+  },
+  {
+    "name": "get_uv_layout",
+    "args": {
+      "cubes": [
+        "body"
+      ]
+    },
+    "summary": "OK: get_uv_layout",
+    "ok": true,
+    "result": {
+      "texture_size": [
+        64,
+        64
+      ],
+      "islands": [
+        {
+          "cube": "body",
+          "cube_uuid": "cec37071-3b86-d11d-103a-ab4047c43eee",
+          "face": "north",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ],
+          "bounds": [
+            0,
+            0,
+            8,
+            8
+          ],
+          "pixel_size": [
+            8,
+            8
+          ],
+          "expected_size": [
+            8,
+            8
+          ],
+          "density": [
+            1,
+            1
+          ],
+          "flip_x": false,
+          "flip_y": false,
+          "rotation": 0,
+          "texture": "c6cd888e-2637-145a-7614-ead69f259986",
+          "out_of_bounds": false
+        },
+        {
+          "cube": "body",
+          "cube_uuid": "cec37071-3b86-d11d-103a-ab4047c43eee",
+          "face": "south",
+          "uv": [
+            9,
+            0,
+            17,
+            8
+          ],
+          "bounds": [
+            9,
+            0,
+            17,
+            8
+          ],
+          "pixel_size": [
+            8,
+            8
+          ],
+          "expected_size": [
+            8,
+            8
+          ],
+          "density": [
+            1,
+            1
+          ],
+          "flip_x": false,
+          "flip_y": false,
+          "rotation": 0,
+          "texture": "c6cd888e-2637-145a-7614-ead69f259986",
+          "out_of_bounds": false
+        },
+        {
+          "cube": "body",
+          "cube_uuid": "cec37071-3b86-d11d-103a-ab4047c43eee",
+          "face": "east",
+          "uv": [
+            18,
+            0,
+            22,
+            8
+          ],
+          "bounds": [
+            18,
+            0,
+            22,
+            8
+          ],
+          "pixel_size": [
+            4,
+            8
+          ],
+          "expected_size": [
+            4,
+            8
+          ],
+          "density": [
+            1,
+            1
+          ],
+          "flip_x": false,
+          "flip_y": false,
+          "rotation": 0,
+          "texture": "c6cd888e-2637-145a-7614-ead69f259986",
+          "out_of_bounds": false
+        },
+        {
+          "cube": "body",
+          "cube_uuid": "cec37071-3b86-d11d-103a-ab4047c43eee",
+          "face": "west",
+          "uv": [
+            23,
+            0,
+            27,
+            8
+          ],
+          "bounds": [
+            23,
+            0,
+            27,
+            8
+          ],
+          "pixel_size": [
+            4,
+            8
+          ],
+          "expected_size": [
+            4,
+            8
+          ],
+          "density": [
+            1,
+            1
+          ],
+          "flip_x": false,
+          "flip_y": false,
+          "rotation": 0,
+          "texture": "c6cd888e-2637-145a-7614-ead69f259986",
+          "out_of_bounds": false
+        },
+        {
+          "cube": "body",
+          "cube_uuid": "cec37071-3b86-d11d-103a-ab4047c43eee",
+          "face": "up",
+          "uv": [
+            28,
+            0,
+            36,
+            4
+          ],
+          "bounds": [
+            28,
+            0,
+            36,
+            4
+          ],
+          "pixel_size": [
+            8,
+            4
+          ],
+          "expected_size": [
+            8,
+            4
+          ],
+          "density": [
+            1,
+            1
+          ],
+          "flip_x": false,
+          "flip_y": false,
+          "rotation": 0,
+          "texture": "c6cd888e-2637-145a-7614-ead69f259986",
+          "out_of_bounds": false
+        },
+        {
+          "cube": "body",
+          "cube_uuid": "cec37071-3b86-d11d-103a-ab4047c43eee",
+          "face": "down",
+          "uv": [
+            37,
+            0,
+            45,
+            4
+          ],
+          "bounds": [
+            37,
+            0,
+            45,
+            4
+          ],
+          "pixel_size": [
+            8,
+            4
+          ],
+          "expected_size": [
+            8,
+            4
+          ],
+          "density": [
+            1,
+            1
+          ],
+          "flip_x": false,
+          "flip_y": false,
+          "rotation": 0,
+          "texture": "c6cd888e-2637-145a-7614-ead69f259986",
+          "out_of_bounds": false
+        }
+      ],
+      "overlaps": [],
+      "summary": {
+        "islands": 6,
+        "out_of_bounds": 0,
+        "overlaps": 0,
+        "unintended_overlaps": 0,
+        "used": [
+          0,
+          0,
+          45,
+          8
+        ]
+      }
+    }
+  },
+  {
+    "name": "audit_texture_quality",
+    "args": {
+      "texture": "live_base"
+    },
+    "summary": "OK: audit_texture_quality",
+    "ok": true,
+    "result": {
+      "texture": "live_base",
+      "revision": "fnv1a32:29c29e95",
+      "faces": 6,
+      "findings": [
+        {
+          "severity": "info",
+          "code": "FLAT_FACE",
+          "face": "body.north",
+          "message": "Face is a uniform fill; verify that flat material is intentional."
+        },
+        {
+          "severity": "info",
+          "code": "FLAT_FACE",
+          "face": "body.south",
+          "message": "Face is a uniform fill; verify that flat material is intentional."
+        },
+        {
+          "severity": "info",
+          "code": "FLAT_FACE",
+          "face": "body.east",
+          "message": "Face is a uniform fill; verify that flat material is intentional."
+        },
+        {
+          "severity": "info",
+          "code": "FLAT_FACE",
+          "face": "body.west",
+          "message": "Face is a uniform fill; verify that flat material is intentional."
+        },
+        {
+          "severity": "info",
+          "code": "FLAT_FACE",
+          "face": "body.up",
+          "message": "Face is a uniform fill; verify that flat material is intentional."
+        },
+        {
+          "severity": "info",
+          "code": "FLAT_FACE",
+          "face": "body.down",
+          "message": "Face is a uniform fill; verify that flat material is intentional."
+        }
+      ],
+      "summary": {
+        "errors": 0,
+        "warns": 0,
+        "infos": 6
+      }
+    }
+  },
+  {
+    "name": "check_model",
+    "args": {},
+    "summary": "OK: check_model",
+    "ok": true,
+    "result": {
+      "findings": [],
+      "summary": {
+        "cubes": 1,
+        "groups": 1,
+        "errors": 0,
+        "warns": 0
+      }
+    }
+  },
+  {
+    "name": "capture_views",
+    "args": {
+      "views": [
+        "north",
+        "south",
+        "iso"
+      ],
+      "max_edge": 256,
+      "format": "png"
+    },
+    "summary": "OK: capture_views",
+    "ok": true,
+    "result": {
+      "views": [
+        {
+          "view": "north",
+          "visible_face": "north",
+          "width": 256,
+          "height": 256,
+          "bytes": 2409,
+          "mime": "image/png"
+        },
+        {
+          "view": "south",
+          "visible_face": "south",
+          "width": 256,
+          "height": 256,
+          "bytes": 2391,
+          "mime": "image/png"
+        },
+        {
+          "view": "iso",
+          "visible_face": null,
+          "width": 256,
+          "height": 256,
+          "bytes": 2736,
+          "mime": "image/png"
+        }
+      ]
+    }
+  },
+  {
+    "name": "get_project_summary",
+    "args": {},
+    "summary": "OK: get_project_summary",
+    "ok": true,
+    "result": {
+      "format": "java_block",
+      "name": "hardened_live_disposable",
+      "geometry_name": "",
+      "texture_width": 64,
+      "texture_height": 64,
+      "uv_mode": "face",
+      "cubes": 1,
+      "groups": 1,
+      "textures": 1,
+      "animations": 0,
+      "outliner": [
+        {
+          "uuid": "14111c4f-99e9-943f-8514-40714ada2720",
+          "name": "test_assembly",
+          "type": "group",
+          "parent": null
+        },
+        {
+          "uuid": "cec37071-3b86-d11d-103a-ab4047c43eee",
+          "name": "body",
+          "type": "cube",
+          "parent": "14111c4f-99e9-943f-8514-40714ada2720"
+        }
+      ]
+    }
+  },
+  {
+    "name": "save_project",
+    "args": {
+      "path": "C:/MinecraftDev/BlockBenchMCP-Test/before-approval.bbmodel"
+    },
+    "summary": "Call propose_scoped_directory first and get user approval.",
+    "ok": false,
+    "error": {
+      "code": "E_SCOPE_DENIED",
+      "message": "Call propose_scoped_directory first and get user approval."
+    }
+  },
+  {
+    "name": "export_model",
+    "args": {
+      "path": "C:/MinecraftDev/BlockBenchMCP-Test/before-approval.json"
+    },
+    "summary": "Call propose_scoped_directory first and get user approval.",
+    "ok": false,
+    "error": {
+      "code": "E_SCOPE_DENIED",
+      "message": "Call propose_scoped_directory first and get user approval."
+    }
+  },
+  {
+    "name": "export_texture_png",
+    "args": {
+      "path": "C:/MinecraftDev/BlockBenchMCP-Test/before-approval.png",
+      "texture": "live_base"
+    },
+    "summary": "Call propose_scoped_directory first and get user approval.",
+    "ok": false,
+    "error": {
+      "code": "E_SCOPE_DENIED",
+      "message": "Call propose_scoped_directory first and get user approval."
+    }
+  },
+  {
+    "name": "import_texture_png",
+    "args": {
+      "path": "C:/MinecraftDev/BlockBenchMCP-Test/before-approval.png"
+    },
+    "summary": "Call propose_scoped_directory first and get user approval.",
+    "ok": false,
+    "error": {
+      "code": "E_SCOPE_DENIED",
+      "message": "Call propose_scoped_directory first and get user approval."
+    }
+  }
+]

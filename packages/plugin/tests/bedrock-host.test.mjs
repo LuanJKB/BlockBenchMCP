@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { after, beforeEach, test } from "node:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, posix } from "node:path";
 import { pathToFileURL } from "node:url";
 import { build } from "esbuild";
 
@@ -188,10 +188,17 @@ test("filesystem reports permission denial instead of bypassing it", () => {
 });
 test("scoped export uses native project codec with explicit overwrite", () => {
   const writes = []; const files = new Set();
-  const path = { isAbsolute: (value) => value.startsWith("/"), resolve: (value) => value, relative: (root, target) => target.startsWith(root + "/") ? target.slice(root.length + 1) : "../escape" };
+  const path = posix;
+  let opened;
   globalThis.require = (name) => name === "path" ? path : {
-    existsSync: (target) => files.has(target), readFileSync() {},
-    writeFileSync: (target, data) => { writes.push([target, data]); files.add(target); },
+    realpathSync: target => target,
+    lstatSync(target) {
+      if (target === "/models" || files.has(target)) return { isSymbolicLink: () => false, isDirectory: () => target === "/models" };
+      throw Object.assign(new Error("missing"), { code: "ENOENT" });
+    },
+    constants: { O_WRONLY: 1, O_CREAT: 64, O_EXCL: 128, O_TRUNC: 512 },
+    openSync(target) { opened = target; return 1; }, closeSync() {},
+    writeFileSync: (fd, data) => { writes.push([opened, data]); files.add(opened); },
   };
   globalThis.Codecs = { project: { compile: () => ({ meta: { model_format: "bedrock" }, textures: [{ source: "data:image/png;base64,AAAA" }] }) } };
   const session = { scopedDirectory: "/models" };

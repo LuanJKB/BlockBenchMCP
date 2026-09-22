@@ -179,9 +179,10 @@ interface PluginData {
 }
 
 declare const Settings: {
-  add?: (id: string, setting: Record<string, unknown>) => void;
+  saveLocalStorages: () => void;
 };
 
+declare class Setting { constructor(id: string, options: { value: string | number | boolean; category: string; name: string; description: string; type: "text" | "number" | "toggle" }); value: string | number | boolean; }
 declare const settings: Record<string, { value?: unknown }>;
 
 declare class Action {

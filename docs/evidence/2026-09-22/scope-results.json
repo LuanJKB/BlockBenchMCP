@@ -1,0 +1,14 @@
+[
+  {
+    "name": "propose_scoped_directory",
+    "args": {
+      "path": "C:/MinecraftDev/BlockBenchMCP-Test"
+    },
+    "summary": "Scoped directory must be an existing directory.",
+    "ok": false,
+    "error": {
+      "code": "E_INVALID_PARAM",
+      "message": "Scoped directory must be an existing directory."
+    }
+  }
+]
